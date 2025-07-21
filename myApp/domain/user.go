@@ -1,37 +1,37 @@
 package domain
 
-type User struct {
-	ID           int    `bun:"id" json:"id"`
-	Email        string `bun:"email" json:"email"`
-	Login        string `bun:"login" json:"login"`
-	PasswordHash string `bun:"password_hash" json:"-"`
-	PhoneNumber  string `bun:"phone" json:"phone"`
+type UserForm struct {
+	ID          int    `bun:"id" json:"id"`
+	Email       string `bun:"email" json:"email"`
+	Login       string `bun:"login" json:"login"`
+	Password    string `bun:"password" json:"password"`
+	PhoneNumber string `bun:"phone_number" json:"phone_number"`
 }
 
-type RegisterUser struct {
+type RegisterUserForm struct {
 	Email           string `json:"email"`
 	Login           string `json:"login"`
-	PasswordHash    string `json:"password"`
+	Password        string `json:"password"`
 	ConfirmPassword string `validate:"required,eqfield=PasswordHash"`
-	PhoneNumber     string `json:"phone"`
+	PhoneNumber     string `json:"phone_number"`
 }
 
-type UserAuth struct {
-	Login        string `json:"login"`
-	PasswordHash string `json:"password_hash"`
+type UserAuthForm struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
 }
 
-type ChangePass struct {
+type ChangePassForm struct {
 	OldPassword string `json:"old_password" validate:"required"`
 	Password    string `json:"password"`
 	ConfirmPass string `json:"confirm_pass" validate:"required,eqfield=Password"`
 }
 
-func (r *RegisterUser) toUser() *User {
-	return &User{
-		Email:        r.Email,
-		Login:        r.Login,
-		PasswordHash: r.PasswordHash,
-		PhoneNumber:  r.PhoneNumber,
+func (r *RegisterUserForm) ToUser() *UserForm {
+	return &UserForm{
+		Email:       r.Email,
+		Login:       r.Login,
+		Password:    r.Password,
+		PhoneNumber: r.PhoneNumber,
 	}
 }
