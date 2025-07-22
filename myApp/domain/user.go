@@ -1,6 +1,6 @@
 package domain
 
-type UserForm struct {
+type User struct {
 	ID          int    `bun:"id" json:"id"`
 	Email       string `bun:"email" json:"email"`
 	Login       string `bun:"login" json:"login"`
@@ -12,7 +12,7 @@ type RegisterUserForm struct {
 	Email           string `json:"email"`
 	Login           string `json:"login"`
 	Password        string `json:"password"`
-	ConfirmPassword string `validate:"required,eqfield=PasswordHash"`
+	ConfirmPassword string `validate:"required,eqfield=Password"`
 	PhoneNumber     string `json:"phone_number"`
 }
 
@@ -27,8 +27,8 @@ type ChangePassForm struct {
 	ConfirmPass string `json:"confirm_pass" validate:"required,eqfield=Password"`
 }
 
-func (r *RegisterUserForm) ToUser() *UserForm {
-	return &UserForm{
+func (r *RegisterUserForm) ToUser() *User {
+	return &User{
 		Email:       r.Email,
 		Login:       r.Login,
 		Password:    r.Password,
