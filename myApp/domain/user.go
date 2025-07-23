@@ -12,7 +12,7 @@ type RegisterUserForm struct {
 	Email           string `json:"email"`
 	Login           string `json:"login"`
 	Password        string `json:"password"`
-	ConfirmPassword string `validate:"required,eqfield=Password"`
+	ConfirmPassword string `json:"confirm_password" validate:"required,eqfield=Password"`
 	PhoneNumber     string `json:"phone_number"`
 }
 
