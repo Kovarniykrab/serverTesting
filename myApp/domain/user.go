@@ -12,7 +12,7 @@ type RegisterUserForm struct {
 	Email           string `json:"email"`
 	Login           string `json:"login"`
 	Password        string `json:"password"`
-	ConfirmPassword string `json:"confirm_password" validate:"required,eqfield=Password"`
+	ConfirmPassword string `json:"confirm_password"`
 	PhoneNumber     string `json:"phone_number"`
 }
 
@@ -22,9 +22,9 @@ type UserAuthForm struct {
 }
 
 type ChangePassForm struct {
-	OldPassword string `json:"old_password" validate:"required"`
+	OldPassword string `json:"old_password"`
 	Password    string `json:"password"`
-	ConfirmPass string `json:"confirm_pass" validate:"required,eqfield=Password"`
+	ConfirmPass string `json:"confirm_pass"`
 }
 
 func (r *RegisterUserForm) ToUser() *User {
