@@ -7,6 +7,19 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+// RegisterUser godoc
+// @Summary     регистрация
+// @Description регистрация нового пользователя
+// @Tags         USER
+// @Accept       json
+// @Produce      json
+// @Param object  body  domain.RegisterUserForm  true  "данные для регистрации"
+// @Success      201  {object} SuccessResponse "Пользователь успешно зарегестрирован"
+// @Failure      400  {object}  ErrorResponse "Неверный формат данных"
+// @Failure      405  {object}  ErrorResponse "Метод не разрешен"
+// @Failure      409  {object}  ErrorResponse "Пользователь с таким Email/Login уже существует"
+// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
+// @Router      /api/user/register [POST].
 func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 	var user domain.RegisterUserForm
 
@@ -29,7 +42,7 @@ func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 	if user.Email == "" || user.Password == "" {
 
 		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetStatusCode(fasthttp.StatusConflict)
 		ctx.WriteString("Email и пароль обязательны")
 		return
 	}
@@ -53,6 +66,19 @@ func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 	ctx.WriteString("Пользователь успешно зарегистрирован")
 }
 
+// DeleteUser godoc
+// @Summary     Удаление пользователя
+// @Description Удаление пользователя из системы
+// @Tags         USER
+// @Accept       json
+// @Produce      json
+// @Param object  body  domain.User  true  "Данные пользователя"
+// @Success      200  {object} DeleteResponse "Пользователь успешно удален"
+// @Failure      400  {object}  ErrorResponse "Неверный запрос"
+// @Failure      405  {object}  ErrorResponse "Метод не разрешен"
+// @Failure      409  {object}  ErrorResponse "Пользователь с таким ID не существует"
+// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
+// @Router     /api/user/delete{id} [DELETE].
 func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 
 	if !ctx.IsDelete() {
@@ -84,6 +110,19 @@ func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 	ctx.WriteString("Пользователь успешно удален")
 }
 
+// UpdatePassword godoc
+// @Summary     изменение пользователя
+// @Description изменение пароля пользователя
+// @Tags         USER
+// @Accept       json
+// @Produce      json
+// @Param object  body  domain.User  true  "Данные пользователя"
+// @Success      200  {object} UpdateResponse "Пользователь успешно изменен"
+// @Failure      400  {object}  ErrorResponse "Неверный запрос"
+// @Failure      405  {object}  ErrorResponse "Метод не разрешен"
+// @Failure      409  {object}  ErrorResponse "Пользователь с таким ID не существует"
+// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
+// @Router     /api/user/update [PUT].
 func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 	if !ctx.IsPut() {
 
@@ -110,6 +149,20 @@ func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 	ctx.WriteString("Пользователь успешно изменен")
 
 }
+
+// AuthUSer godoc
+// @Summary    Авторизация
+// @Description Авторизация пользователя
+// @Tags         USER
+// @Accept       json
+// @Produce      json
+// @Param object  body  domain.UserAuthForm  true  "Данные для авторизации пользователя"
+// @Success      200  {object} AuthResponse "Успешный вход"
+// @Failure      400  {object}  ErrorResponse "Неверный запрос"
+// @Failure      405  {object}  ErrorResponse "Метод не разрешен"
+// @Failure      409  {object}  ErrorResponse "Неверный Email/Password"
+// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
+// @Router     /api/user/login [POST].
 func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 	var user domain.UserAuthForm
 
@@ -139,9 +192,23 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusOK)
 
 	//выдать сгенерированный jwt токен
+	//сообщение "Успешный вход"
 
 }
 
+// GetUser godoc
+// @Summary     Поиск польхователя
+// @Description Поиск пользователя по ID
+// @Tags         USER
+// @Accept       json
+// @Produce      json
+// @Param object  body  domain.User  true  "Данные пользователя"
+// @Success      200  {object} GetUserResponse "Пользователь найден"
+// @Failure      400  {object}  ErrorResponse "Неверный запрос"
+// @Failure      404  {object}  ErrorResponse "Пользователь не найден"
+// @Failure      405  {object}  ErrorResponse "Метод не разрешен"
+// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
+// @Router     /api/user/profile/{id} [GET].
 func GetUserHandler(ctx *fasthttp.RequestCtx) {
 	if !ctx.IsGet() {
 
@@ -169,6 +236,17 @@ func GetUserHandler(ctx *fasthttp.RequestCtx) {
 
 }
 
+// LogoutUser godoc
+// @Summary     выход
+// @Description окончание сессии
+// @Tags         USER
+// @Accept       json
+// @Produce      json
+// @Param object  body  domain.User  true  "Данные пользователя"
+// @Failure      400  {object}  ErrorResponse "Неверный запрос"
+// @Failure      405  {object}  ErrorResponse "Метод не разрешен"
+// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
+// @Router     /api/user/logout [POST].
 func LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 	if !ctx.IsPost() {
 

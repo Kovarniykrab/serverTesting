@@ -8,22 +8,35 @@ type User struct {
 	PhoneNumber string `bun:"phone_number" json:"phone_number"`
 }
 
+// форма регистрации
 type RegisterUserForm struct {
-	Email           string `json:"email"`
-	Login           string `json:"login"`
-	Password        string `json:"password"`
+	// Почта
+	Email string `json:"email"`
+	// логин
+	Login string `json:"login"`
+	//пароль
+	Password string `json:"password"`
+	//подтверждение пароля
 	ConfirmPassword string `json:"confirm_password"`
-	PhoneNumber     string `json:"phone_number"`
+	//номер телефона
+	PhoneNumber string `json:"phone_number"`
 }
 
+// форма авторизации
 type UserAuthForm struct {
-	Login    string `json:"login"`
+	// логин
+	Login string `json:"login"`
+	//пароль
 	Password string `json:"password"`
 }
 
+// форма смены пароля
 type ChangePassForm struct {
+	//cтарый пароль
 	OldPassword string `json:"old_password"`
-	Password    string `json:"password"`
+	//новый пароль
+	Password string `json:"password"`
+	//подтверждение пароля
 	ConfirmPass string `json:"confirm_pass"`
 }
 
