@@ -1,0 +1,305 @@
+basePath: /api
+definitions:
+  domain.RegisterUserForm:
+    properties:
+      confirm_password:
+        description: подтверждение пароля
+        type: string
+      email:
+        description: Почта
+        type: string
+      login:
+        description: логин
+        type: string
+      password:
+        description: пароль
+        type: string
+      phone_number:
+        description: номер телефона
+        type: string
+    type: object
+  domain.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      login:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  domain.UserAuthForm:
+    properties:
+      login:
+        description: логин
+        type: string
+      password:
+        description: пароль
+        type: string
+    type: object
+  handlers.AuthResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  handlers.DeleteResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  handlers.GetUserResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.UpdateResponse:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API для управления пользователями
+  title: TestUser API
+  version: "0.5"
+paths:
+  /api/user/delete{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаление пользователя из системы
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно удален
+          schema:
+            $ref: '#/definitions/handlers.DeleteResponse'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "405":
+          description: Метод не разрешен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Пользователь с таким ID не существует
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Удаление пользователя
+      tags:
+      - USER
+  /api/user/login:
+    post:
+      consumes:
+      - application/json
+      description: Авторизация пользователя
+      parameters:
+      - description: Данные для авторизации пользователя
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UserAuthForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный вход
+          schema:
+            $ref: '#/definitions/handlers.AuthResponse'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "405":
+          description: Метод не разрешен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Неверный Email/Password
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Авторизация
+      tags:
+      - USER
+  /api/user/logout:
+    post:
+      consumes:
+      - application/json
+      description: окончание сессии
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "405":
+          description: Метод не разрешен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: выход
+      tags:
+      - USER
+  /api/user/profile/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Поиск пользователя по ID
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь найден
+          schema:
+            $ref: '#/definitions/handlers.GetUserResponse'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "405":
+          description: Метод не разрешен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Поиск польхователя
+      tags:
+      - USER
+  /api/user/register:
+    post:
+      consumes:
+      - application/json
+      description: регистрация нового пользователя
+      parameters:
+      - description: данные для регистрации
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RegisterUserForm'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Пользователь успешно зарегестрирован
+          schema:
+            $ref: '#/definitions/handlers.SuccessResponse'
+        "400":
+          description: Неверный формат данных
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "405":
+          description: Метод не разрешен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Пользователь с таким Email/Login уже существует
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: регистрация
+      tags:
+      - USER
+  /api/user/update:
+    put:
+      consumes:
+      - application/json
+      description: изменение пароля пользователя
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно изменен
+          schema:
+            $ref: '#/definitions/handlers.UpdateResponse'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "405":
+          description: Метод не разрешен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Пользователь с таким ID не существует
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: изменение пользователя
+      tags:
+      - USER
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

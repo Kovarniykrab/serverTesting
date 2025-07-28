@@ -19,7 +19,7 @@ import (
 // @Failure      405  {object}  ErrorResponse "Метод не разрешен"
 // @Failure      409  {object}  ErrorResponse "Пользователь с таким Email/Login уже существует"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router      /api/user/register [POST].
+// @Router      /api/user/register [POST]
 func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 	var user domain.RegisterUserForm
 
@@ -78,7 +78,7 @@ func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      405  {object}  ErrorResponse "Метод не разрешен"
 // @Failure      409  {object}  ErrorResponse "Пользователь с таким ID не существует"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/delete{id} [DELETE].
+// @Router     /api/user/delete{id} [DELETE]
 func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 
 	if !ctx.IsDelete() {
@@ -122,7 +122,7 @@ func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      405  {object}  ErrorResponse "Метод не разрешен"
 // @Failure      409  {object}  ErrorResponse "Пользователь с таким ID не существует"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/update [PUT].
+// @Router     /api/user/update [PUT]
 func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 	if !ctx.IsPut() {
 
@@ -162,7 +162,7 @@ func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      405  {object}  ErrorResponse "Метод не разрешен"
 // @Failure      409  {object}  ErrorResponse "Неверный Email/Password"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/login [POST].
+// @Router     /api/user/login [POST]
 func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 	var user domain.UserAuthForm
 
@@ -208,7 +208,7 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      404  {object}  ErrorResponse "Пользователь не найден"
 // @Failure      405  {object}  ErrorResponse "Метод не разрешен"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/profile/{id} [GET].
+// @Router     /api/user/profile/{id} [GET]
 func GetUserHandler(ctx *fasthttp.RequestCtx) {
 	if !ctx.IsGet() {
 
@@ -246,7 +246,7 @@ func GetUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      405  {object}  ErrorResponse "Метод не разрешен"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/logout [POST].
+// @Router     /api/user/logout [POST]
 func LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 	if !ctx.IsPost() {
 
