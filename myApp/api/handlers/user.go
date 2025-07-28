@@ -34,9 +34,9 @@ func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	// проверка занят ли login и email
+	// проверка занят ли login и email и телефон
 
-	if user.Password == user.ConfirmPassword {
+	if user.ConfirmPassword != user.Password {
 
 		ctx.SetContentType("application/json")
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
@@ -47,6 +47,7 @@ func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 	//генерация хеш из пароля
 
 	//запись данных в бд
+
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusCreated)
 	ctx.WriteString("Пользователь успешно зарегистрирован")
@@ -127,6 +128,7 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 		ctx.WriteString("Неверный формат данных")
 		return
 	}
+
 	//проверка существования польхователя в бд по логену или email
 
 	//проверка пароля
@@ -135,6 +137,7 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
+
 	//выдать сгенерированный jwt токен
 
 }
@@ -159,6 +162,7 @@ func GetUserHandler(ctx *fasthttp.RequestCtx) {
 	//проверка существования пользователя в бд
 
 	//выдать результат
+
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.WriteString("Пользователь найден")
@@ -173,8 +177,11 @@ func LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 		ctx.WriteString("метод не разрешён")
 		return
 	}
+
 	// проверка сущестования токена. Если токен просрочен - выход
+
 	//удаление токена
+
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.WriteString("Успешный выход")
