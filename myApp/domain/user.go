@@ -3,18 +3,18 @@ package domain
 type User struct {
 	ID          int    `bun:"id" json:"id"`
 	Email       string `bun:"email" json:"email"`
-	Login       string `bun:"login" json:"login"`
+	Name        string `bun:"name" json:"name"`
 	Password    string `bun:"password" json:"password"`
 	PhoneNumber string `bun:"phone_number" json:"phone_number"`
 }
 
 // форма регистрации
+// аннотация на обязательные поля!!!
 type RegisterUserForm struct {
 	// Почта
 	Email string `json:"email"`
-	// логин
-	Login string `json:"login"`
 	//пароль
+	Name     string `json:"name"`
 	Password string `json:"password"`
 	//подтверждение пароля
 	ConfirmPassword string `json:"confirm_password"`
@@ -25,7 +25,7 @@ type RegisterUserForm struct {
 // форма авторизации
 type UserAuthForm struct {
 	// логин
-	Login string `json:"login"`
+	Email string `json:"email"`
 	//пароль
 	Password string `json:"password"`
 }
@@ -43,7 +43,6 @@ type ChangePassForm struct {
 func (r *RegisterUserForm) ToUser() *User {
 	return &User{
 		Email:       r.Email,
-		Login:       r.Login,
 		Password:    r.Password,
 		PhoneNumber: r.PhoneNumber,
 	}
