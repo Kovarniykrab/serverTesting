@@ -18,8 +18,9 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param object  body  domain.RegisterUserForm  true  "Обязательные поля : email, password, name, confirm_password"
-// @Success      204  {object} SuccessResponse "Пользователь успешно зарегестрирован"
+// @Success      204  "Пользователь успешно зарегестрирован"
 // @Failure      400  {object}  ErrorResponse "Неверный формат данных"
+// @Failure      404  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router      /api/user/register [POST]
 func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
@@ -67,10 +68,10 @@ func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 // @Tags         USER
 // @Accept       json
 // @Produce      json
-// @Param object  id  path  string  true  "ID пользователя"
-// @Success      204  {object} SuccessResponse "Пользователь успешно удален"
+// @Param        id  path  string  true  "ID пользователя"
+// @Success      204  "Пользователь успешно удален"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
-// @Failure      409  {object}  ErrorResponse "Пользователь с таким ID не существует"
+// @Failure      404  {object}  ErrorResponse "запрашиваемая страница не существует"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/delete{id} [DELETE]
 func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
@@ -105,9 +106,8 @@ func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 // @Accept       json
 // @Produce      json
 // @Param object  body  domain.ChangePassForm  true  "Обязательные поля : password, confirm_password"
-// @Success      200  {object} SuccessResponse "Пользователь успешно изменен"
+// @Success      204  "Пользователь успешно изменен"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
-// @Failure      409  {object}  ErrorResponse "Пользователь с таким ID не существует"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/update [PUT]
 func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
@@ -134,14 +134,16 @@ func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 // @Summary    Авторизация
 // @Description Авторизация происходит с помощью email и пароля
 // @Description хендлер принимает почту и пароль. По почте ищет пользователя и сверяет 2 хеша. Если они совпадают - пользователь авторизуется
-// @Description при авторизации пользователь проверяет временный jwt токен.
+// @Description при авторизации пользоватcz проверяет временный jwt токен.
+// @Description если авторизация успешна, вызываются хендлеры, которые в свою очередь выдают пользователю данные профиля и историю его диалогов, внутри которых
+// @Description переписка с конкретным пользователем
 // @Tags         USER
 // @Accept       json
 // @Produce      json
 // @Param object  body  domain.UserAuthForm  true  "Обязательные поля : email, password"
-// @Success      200  {object} SuccessResponse "Успешный вход"
+// @Success      204  "Успешный вход"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
-// @Failure      409  {object}  ErrorResponse "Неверный Email/Password"
+// @Failure      404  {object}  ErrorResponse "Неверный Email/Password"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/login [POST]
 func AuthUserHandler(ctx *fasthttp.RequestCtx) {
@@ -171,12 +173,12 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 
 // GetUser godoc
 // @Summary     Поиск польхователя
-// @Description хендлер получает ID или name и ищет пользователей по id или name в базе данных и выводит все результаты
+// @Description хендлер получает ID или name и ищет пользователей по id или name в базе данных и выводит все результаты в форме списка.
 // @Tags         USER
 // @Accept       json
 // @Produce      json
-// @Param object  body  domain.User  true  "Обязательные поля: id"
-// @Success      200  {object} SuccessResponse "Пользователь найден"
+// @Param        id  path  string  true  "ID пользователя"
+// @Success      204  {object} SuccessResponse "Пользователь найден"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      404  {object}  ErrorResponse "Пользователь не найден"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
@@ -201,14 +203,31 @@ func GetUserHandler(ctx *fasthttp.RequestCtx) {
 
 }
 
-// LogoutUser godoc
-// @Summary     выход
-// @Description сессия завершается по сигналу или по истечении токена
+// ChangeUser godoc
+// @Summary     изменение данных пользователя
+// @Description хендлер принимает форму, в которой содержатся новые данные и данные оставшиеся без изменений.
+// @Description он записывает все данные вместо старых
 // @Tags         USER
 // @Accept       json
 // @Produce      json
-// @Param object  body  domain.User  true  "Данные пользователя"
-// @Success      204  {object} SuccessResponse "Успешный выход"
+// @Param object  body  domain.ChangeUserForm  true  "Данные пользователя"
+// @Success      204  {object} "Успешный выход"
+// @Failure      400  {object}  ErrorResponse "Неверный запрос"
+// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
+// @Router     /api/user/logout [POST]
+func ChangeUserHandler(ctx *fasthttp.RequestCtx) {
+
+}
+
+// LogoutUser godoc
+// @Summary     выход
+// @Description сессия завершается по сигналу или по истечении токена
+// @Description пользователя должно выкинуть на страницу авторизации
+// @Tags         USER
+// @Accept       json
+// @Produce      json
+// @Param        id  path  string  true  "ID пользователя"
+// @Success      200  {object} domain.UserAuthForm  ""
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/logout [POST]
