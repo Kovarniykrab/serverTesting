@@ -10,3 +10,7 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+// AuthResponse - токен
+type AuthResponse struct {
+	JWTToken string `json:"JWT"`
+}

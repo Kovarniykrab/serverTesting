@@ -15,9 +15,101 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/user/delete{id}": {
+        "/api/user/changePassword": {
+            "put": {
+                "description": "хендлер проверяет авторизован ли пользователь и запрашивает подтверждение пароля\nесли все в порядке, пользователю подается форма, для изменения данных.\nзатем пользователь подает форму на сервер, и они записываются вместо старых",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "USER"
+                ],
+                "summary": "изменение пользователя",
+                "parameters": [
+                    {
+                        "description": "Обязательные поля : password, confirm_password",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ChangePassForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Пароль успешно изменен"
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/changeUser": {
+            "put": {
+                "description": "хендлер принимает форму, в которой содержатся новые данные и данные оставшиеся без изменений.\nон записывает все данные вместо старых",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "USER"
+                ],
+                "summary": "изменение данных пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные пользователя",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ChangeUserForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Данные успешно обновлены"
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/delete/{id}": {
             "delete": {
-                "description": "Удаление пользователя из системы",
+                "description": "Пользователя удаляют из системы по ID. Хендлер принимает ID,\nи с его помощью находит пользователя в базе данных и удаляет его из нее",
                 "consumes": [
                     "application/json"
                 ],
@@ -30,21 +122,16 @@ const docTemplate = `{
                 "summary": "Удаление пользователя",
                 "parameters": [
                     {
-                        "description": "Данные пользователя",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.User"
-                        }
+                        "type": "string",
+                        "description": "Обязательные поля: id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Пользователь успешно удален",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.DeleteResponse"
-                        }
+                    "204": {
+                        "description": "Пользователь успешно удален"
                     },
                     "400": {
                         "description": "Неверный запрос",
@@ -52,14 +139,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
-                    "405": {
-                        "description": "Метод не разрешен",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Пользователь с таким ID не существует",
+                    "404": {
+                        "description": "запрашиваемая страница не существует",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -75,7 +156,7 @@ const docTemplate = `{
         },
         "/api/user/login": {
             "post": {
-                "description": "Авторизация пользователя",
+                "description": "Авторизация происходит с помощью email и пароля\nхендлер принимает почту и пароль. По почте ищет пользователя и сверяет 2 хеша. Если они совпадают - пользователь авторизуется\nпри авторизации пользоватcz проверяет временный jwt токен.\nесли авторизация успешна, вызываются хендлеры, которые в свою очередь выдают пользователю данные профиля и историю его диалогов, внутри которых\nпереписка с конкретным пользователем",
                 "consumes": [
                     "application/json"
                 ],
@@ -88,7 +169,7 @@ const docTemplate = `{
                 "summary": "Авторизация",
                 "parameters": [
                     {
-                        "description": "Данные для авторизации пользователя",
+                        "description": "Обязательные поля : email, password",
                         "name": "object",
                         "in": "body",
                         "required": true,
@@ -110,13 +191,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
-                    "405": {
-                        "description": "Метод не разрешен",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "409": {
+                    "404": {
                         "description": "Неверный Email/Password",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
@@ -133,7 +208,7 @@ const docTemplate = `{
         },
         "/api/user/logout": {
             "post": {
-                "description": "окончание сессии",
+                "description": "сессия завершается по сигналу или по истечении токена\nпользователя должно выкинуть на страницу авторизации",
                 "consumes": [
                     "application/json"
                 ],
@@ -144,26 +219,12 @@ const docTemplate = `{
                     "USER"
                 ],
                 "summary": "выход",
-                "parameters": [
-                    {
-                        "description": "Данные пользователя",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.User"
-                        }
-                    }
-                ],
                 "responses": {
+                    "204": {
+                        "description": "успешный выход"
+                    },
                     "400": {
                         "description": "Неверный запрос",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "405": {
-                        "description": "Метод не разрешен",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -177,9 +238,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/user/profile/{id}": {
+        "/api/user/profile/": {
             "get": {
-                "description": "Поиск пользователя по ID",
+                "description": "хендлер получает ID или name и ищет пользователей по id или name в базе данных и выводит все результаты в форме списка.",
                 "consumes": [
                     "application/json"
                 ],
@@ -192,20 +253,18 @@ const docTemplate = `{
                 "summary": "Поиск польхователя",
                 "parameters": [
                     {
-                        "description": "Данные пользователя",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.User"
-                        }
+                        "type": "string",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "Пользователь найден",
                         "schema": {
-                            "$ref": "#/definitions/handlers.GetUserResponse"
+                            "$ref": "#/definitions/handlers.SuccessResponse"
                         }
                     },
                     "400": {
@@ -216,12 +275,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Пользователь не найден",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "405": {
-                        "description": "Метод не разрешен",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -237,7 +290,7 @@ const docTemplate = `{
         },
         "/api/user/register": {
             "post": {
-                "description": "регистрация нового пользователя",
+                "description": "во время регистации хендлер принимает данные, которые подает пользователь и проверяет\nесли email не занят,\nто данные записываются на сервер в базу данных, пользователю присваивается id\nи отправляется письмо на почту, с просьбой подтвердить аккаунт и ссылкой, по которой нужно перейти для подтверждения аккаунта\nесли занят email, на указанную почту приходит уведомление о том, что на его почту пытаются зарегестрировать новый аккаунт",
                 "consumes": [
                     "application/json"
                 ],
@@ -250,7 +303,7 @@ const docTemplate = `{
                 "summary": "регистрация",
                 "parameters": [
                     {
-                        "description": "данные для регистрации",
+                        "description": "Обязательные поля : email, password, name, confirm_password, date_of_birth",
                         "name": "object",
                         "in": "body",
                         "required": true,
@@ -260,11 +313,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Пользователь успешно зарегестрирован",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.SuccessResponse"
-                        }
+                    "204": {
+                        "description": "Пользователь успешно зарегестрирован"
                     },
                     "400": {
                         "description": "Неверный формат данных",
@@ -272,72 +322,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
-                    "405": {
-                        "description": "Метод не разрешен",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Пользователь с таким Email/Login уже существует",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Ошибка сервера",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/user/update": {
-            "put": {
-                "description": "изменение пароля пользователя",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "USER"
-                ],
-                "summary": "изменение пользователя",
-                "parameters": [
-                    {
-                        "description": "Данные пользователя",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.User"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Пользователь успешно изменен",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateResponse"
-                        }
-                    },
-                    "400": {
+                    "404": {
                         "description": "Неверный запрос",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "405": {
-                        "description": "Метод не разрешен",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Пользователь с таким ID не существует",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -353,47 +339,57 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "domain.RegisterUserForm": {
+        "domain.ChangePassForm": {
             "type": "object",
             "properties": {
-                "confirm_password": {
-                    "description": "подтверждение пароля",
+                "confirm_pass": {
+                    "description": "подтверждение пароля\nПоле обязательно",
                     "type": "string"
                 },
-                "email": {
-                    "description": "Почта",
-                    "type": "string"
-                },
-                "login": {
-                    "description": "логин",
+                "old_password": {
+                    "description": "cтарый пароль\nПоле обязательно",
                     "type": "string"
                 },
                 "password": {
-                    "description": "пароль",
-                    "type": "string"
-                },
-                "phone_number": {
-                    "description": "номер телефона",
+                    "description": "новый пароль\nПоле обязательно",
                     "type": "string"
                 }
             }
         },
-        "domain.User": {
+        "domain.ChangeUserForm": {
             "type": "object",
             "properties": {
-                "email": {
+                "date_of_birth": {
+                    "description": "дата рождения\nПоле обязательно",
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
+                "name": {
+                    "description": "имя пользователя\nПоле обязательно",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.RegisterUserForm": {
+            "type": "object",
+            "properties": {
+                "confirm_password": {
+                    "description": "подтверждение пароля\nПоле обязательно",
+                    "type": "string"
                 },
-                "login": {
+                "date_of_birth": {
+                    "description": "дата рождения\nПоле обязательно",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Почта\nПоле обязательно",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "имя пользователя\nПоле обязательно",
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
-                },
-                "phone_number": {
+                    "description": "пароль\nПоле обязательно",
                     "type": "string"
                 }
             }
@@ -401,12 +397,12 @@ const docTemplate = `{
         "domain.UserAuthForm": {
             "type": "object",
             "properties": {
-                "login": {
-                    "description": "логин",
+                "email": {
+                    "description": "логин\nПоле обязательно",
                     "type": "string"
                 },
                 "password": {
-                    "description": "пароль",
+                    "description": "пароль\nПоле обязательно",
                     "type": "string"
                 }
             }
@@ -414,15 +410,7 @@ const docTemplate = `{
         "handlers.AuthResponse": {
             "type": "object",
             "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.DeleteResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
+                "JWT": {
                     "type": "string"
                 }
             }
@@ -435,23 +423,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.GetUserResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
         "handlers.SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.UpdateResponse": {
             "type": "object",
             "properties": {
                 "message": {

@@ -10,7 +10,7 @@ func GetRouter() *router.Router {
 	api := routers.Group("/api")
 
 	user := api.Group("/user")
-	user.GET("/profile/{id}", handlers.GetUserHandler)
+	user.GET("/profile/", handlers.GetUserHandler)
 	user.POST("/register", handlers.RegisterUserHandler)
 	user.PUT("/changePassword", handlers.UpdatePasswordHandler)
 	user.PUT("/changeUser", handlers.ChangeUserHandler)

@@ -17,7 +17,7 @@ import (
 // @Tags         USER
 // @Accept       json
 // @Produce      json
-// @Param object  body  domain.RegisterUserForm  true  "Обязательные поля : email, password, name, confirm_password"
+// @Param object  body  domain.RegisterUserForm  true  "Обязательные поля : email, password, name, confirm_password, date_of_birth"
 // @Success      204  "Пользователь успешно зарегестрирован"
 // @Failure      400  {object}  ErrorResponse "Неверный формат данных"
 // @Failure      404  {object}  ErrorResponse "Неверный запрос"
@@ -68,12 +68,12 @@ func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 // @Tags         USER
 // @Accept       json
 // @Produce      json
-// @Param        id  path  string  true  "ID пользователя"
+// @Param        id  path  string  true  "Обязательные поля: id"
 // @Success      204  "Пользователь успешно удален"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      404  {object}  ErrorResponse "запрашиваемая страница не существует"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/delete{id} [DELETE]
+// @Router     /api/user/delete/{id} [DELETE]
 func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 
 	id := ctx.UserValue("id").(string)
@@ -106,10 +106,11 @@ func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 // @Accept       json
 // @Produce      json
 // @Param object  body  domain.ChangePassForm  true  "Обязательные поля : password, confirm_password"
-// @Success      204  "Пользователь успешно изменен"
+// @Success      204  "Пароль успешно изменен"
+// @Failure      401 {object} ErrorResponse "Не авторизован"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/update [PUT]
+// @Router     /api/user/changePassword [PUT]
 func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 
 	id := ctx.UserValue("id").(string)
@@ -141,7 +142,7 @@ func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 // @Accept       json
 // @Produce      json
 // @Param object  body  domain.UserAuthForm  true  "Обязательные поля : email, password"
-// @Success      204  "Успешный вход"
+// @Success      200  {object}  AuthResponse  "Успешный вход"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      404  {object}  ErrorResponse "Неверный Email/Password"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
@@ -178,11 +179,11 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Accept       json
 // @Produce      json
 // @Param        id  path  string  true  "ID пользователя"
-// @Success      204  {object} SuccessResponse "Пользователь найден"
+// @Success      200  {object} SuccessResponse "Пользователь найден"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      404  {object}  ErrorResponse "Пользователь не найден"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/profile/{id} [GET]
+// @Router     /api/user/profile/ [GET]
 func GetUserHandler(ctx *fasthttp.RequestCtx) {
 	id := ctx.UserValue("id").(string)
 	if id == "" {
@@ -211,10 +212,10 @@ func GetUserHandler(ctx *fasthttp.RequestCtx) {
 // @Accept       json
 // @Produce      json
 // @Param object  body  domain.ChangeUserForm  true  "Данные пользователя"
-// @Success      204  {object} "Успешный выход"
+// @Success      204  "Данные успешно обновлены"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/logout [POST]
+// @Router     /api/user/changeUser [PUT]
 func ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 
 }
@@ -226,8 +227,7 @@ func ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 // @Tags         USER
 // @Accept       json
 // @Produce      json
-// @Param        id  path  string  true  "ID пользователя"
-// @Success      200  {object} domain.UserAuthForm  ""
+// @Success      204  "успешный выход"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/logout [POST]

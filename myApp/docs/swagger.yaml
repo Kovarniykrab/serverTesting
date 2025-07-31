@@ -1,53 +1,80 @@
 basePath: /api
 definitions:
+  domain.ChangePassForm:
+    properties:
+      confirm_pass:
+        description: |-
+          подтверждение пароля
+          Поле обязательно
+        type: string
+      old_password:
+        description: |-
+          cтарый пароль
+          Поле обязательно
+        type: string
+      password:
+        description: |-
+          новый пароль
+          Поле обязательно
+        type: string
+    type: object
+  domain.ChangeUserForm:
+    properties:
+      date_of_birth:
+        description: |-
+          дата рождения
+          Поле обязательно
+        type: string
+      name:
+        description: |-
+          имя пользователя
+          Поле обязательно
+        type: string
+    type: object
   domain.RegisterUserForm:
     properties:
       confirm_password:
-        description: подтверждение пароля
+        description: |-
+          подтверждение пароля
+          Поле обязательно
+        type: string
+      date_of_birth:
+        description: |-
+          дата рождения
+          Поле обязательно
         type: string
       email:
-        description: Почта
+        description: |-
+          Почта
+          Поле обязательно
         type: string
-      login:
-        description: логин
-        type: string
-      password:
-        description: пароль
-        type: string
-      phone_number:
-        description: номер телефона
-        type: string
-    type: object
-  domain.User:
-    properties:
-      email:
-        type: string
-      id:
-        type: integer
-      login:
+      name:
+        description: |-
+          имя пользователя
+          Поле обязательно
         type: string
       password:
-        type: string
-      phone_number:
+        description: |-
+          пароль
+          Поле обязательно
         type: string
     type: object
   domain.UserAuthForm:
     properties:
-      login:
-        description: логин
+      email:
+        description: |-
+          логин
+          Поле обязательно
         type: string
       password:
-        description: пароль
+        description: |-
+          пароль
+          Поле обязательно
         type: string
     type: object
   handlers.AuthResponse:
     properties:
-      token:
-        type: string
-    type: object
-  handlers.DeleteResponse:
-    properties:
-      message:
+      JWT:
         type: string
     type: object
   handlers.ErrorResponse:
@@ -55,17 +82,7 @@ definitions:
       error:
         type: string
     type: object
-  handlers.GetUserResponse:
-    properties:
-      message:
-        type: string
-    type: object
   handlers.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  handlers.UpdateResponse:
     properties:
       message:
         type: string
@@ -77,35 +94,95 @@ info:
   title: TestUser API
   version: "0.5"
 paths:
-  /api/user/delete{id}:
-    delete:
+  /api/user/changePassword:
+    put:
       consumes:
       - application/json
-      description: Удаление пользователя из системы
+      description: |-
+        хендлер проверяет авторизован ли пользователь и запрашивает подтверждение пароля
+        если все в порядке, пользователю подается форма, для изменения данных.
+        затем пользователь подает форму на сервер, и они записываются вместо старых
+      parameters:
+      - description: 'Обязательные поля : password, confirm_password'
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ChangePassForm'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Пароль успешно изменен
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: изменение пользователя
+      tags:
+      - USER
+  /api/user/changeUser:
+    put:
+      consumes:
+      - application/json
+      description: |-
+        хендлер принимает форму, в которой содержатся новые данные и данные оставшиеся без изменений.
+        он записывает все данные вместо старых
       parameters:
       - description: Данные пользователя
         in: body
         name: object
         required: true
         schema:
-          $ref: '#/definitions/domain.User'
+          $ref: '#/definitions/domain.ChangeUserForm'
       produces:
       - application/json
       responses:
-        "200":
-          description: Пользователь успешно удален
-          schema:
-            $ref: '#/definitions/handlers.DeleteResponse'
+        "204":
+          description: Данные успешно обновлены
         "400":
           description: Неверный запрос
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
-        "405":
-          description: Метод не разрешен
+        "500":
+          description: Ошибка сервера
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
-        "409":
-          description: Пользователь с таким ID не существует
+      summary: изменение данных пользователя
+      tags:
+      - USER
+  /api/user/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        Пользователя удаляют из системы по ID. Хендлер принимает ID,
+        и с его помощью находит пользователя в базе данных и удаляет его из нее
+      parameters:
+      - description: 'Обязательные поля: id'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Пользователь успешно удален
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: запрашиваемая страница не существует
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -119,9 +196,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: Авторизация пользователя
+      description: |-
+        Авторизация происходит с помощью email и пароля
+        хендлер принимает почту и пароль. По почте ищет пользователя и сверяет 2 хеша. Если они совпадают - пользователь авторизуется
+        при авторизации пользоватcz проверяет временный jwt токен.
+        если авторизация успешна, вызываются хендлеры, которые в свою очередь выдают пользователю данные профиля и историю его диалогов, внутри которых
+        переписка с конкретным пользователем
       parameters:
-      - description: Данные для авторизации пользователя
+      - description: 'Обязательные поля : email, password'
         in: body
         name: object
         required: true
@@ -138,11 +220,7 @@ paths:
           description: Неверный запрос
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
-        "405":
-          description: Метод не разрешен
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "409":
+        "404":
           description: Неверный Email/Password
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
@@ -157,23 +235,16 @@ paths:
     post:
       consumes:
       - application/json
-      description: окончание сессии
-      parameters:
-      - description: Данные пользователя
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/domain.User'
+      description: |-
+        сессия завершается по сигналу или по истечении токена
+        пользователя должно выкинуть на страницу авторизации
       produces:
       - application/json
       responses:
+        "204":
+          description: успешный выход
         "400":
           description: Неверный запрос
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "405":
-          description: Метод не разрешен
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -183,35 +254,31 @@ paths:
       summary: выход
       tags:
       - USER
-  /api/user/profile/{id}:
+  /api/user/profile/:
     get:
       consumes:
       - application/json
-      description: Поиск пользователя по ID
+      description: хендлер получает ID или name и ищет пользователей по id или name
+        в базе данных и выводит все результаты в форме списка.
       parameters:
-      - description: Данные пользователя
-        in: body
-        name: object
+      - description: ID пользователя
+        in: path
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/domain.User'
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: Пользователь найден
           schema:
-            $ref: '#/definitions/handlers.GetUserResponse'
+            $ref: '#/definitions/handlers.SuccessResponse'
         "400":
           description: Неверный запрос
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Пользователь не найден
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "405":
-          description: Метод не разрешен
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -225,9 +292,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: регистрация нового пользователя
+      description: |-
+        во время регистации хендлер принимает данные, которые подает пользователь и проверяет
+        если email не занят,
+        то данные записываются на сервер в базу данных, пользователю присваивается id
+        и отправляется письмо на почту, с просьбой подтвердить аккаунт и ссылкой, по которой нужно перейти для подтверждения аккаунта
+        если занят email, на указанную почту приходит уведомление о том, что на его почту пытаются зарегестрировать новый аккаунт
       parameters:
-      - description: данные для регистрации
+      - description: 'Обязательные поля : email, password, name, confirm_password,
+          date_of_birth'
         in: body
         name: object
         required: true
@@ -236,20 +309,14 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
+        "204":
           description: Пользователь успешно зарегестрирован
-          schema:
-            $ref: '#/definitions/handlers.SuccessResponse'
         "400":
           description: Неверный формат данных
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
-        "405":
-          description: Метод не разрешен
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "409":
-          description: Пользователь с таким Email/Login уже существует
+        "404":
+          description: Неверный запрос
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -257,44 +324,6 @@ paths:
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
       summary: регистрация
-      tags:
-      - USER
-  /api/user/update:
-    put:
-      consumes:
-      - application/json
-      description: изменение пароля пользователя
-      parameters:
-      - description: Данные пользователя
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/domain.User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Пользователь успешно изменен
-          schema:
-            $ref: '#/definitions/handlers.UpdateResponse'
-        "400":
-          description: Неверный запрос
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "405":
-          description: Метод не разрешен
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "409":
-          description: Пользователь с таким ID не существует
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Ошибка сервера
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      summary: изменение пользователя
       tags:
       - USER
 securityDefinitions:
