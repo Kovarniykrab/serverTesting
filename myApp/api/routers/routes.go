@@ -18,5 +18,8 @@ func GetRouter() *router.Router {
 	user.POST("/logout", handlers.LogoutUserHandler)
 	user.POST("/login", handlers.AuthUserHandler)
 
+	api.GET("/swagger")
+
 	return routers
+
 }
