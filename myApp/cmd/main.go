@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/Kovarniykrab/serverTesting/api/handlers"
 	"github.com/Kovarniykrab/serverTesting/api/routers"
 	_ "github.com/Kovarniykrab/serverTesting/docs"
 	"github.com/fasthttp/router"
@@ -21,16 +23,33 @@ import (
 // @name                        Authorization
 
 func main() {
-	var _ = handlers.RegisterUserHandler
-	fmt.Println("API server started on :8080")
-	go func() {
-		r := routers.GetRouter()
-		fasthttp.ListenAndServe(":8080", r.Handler)
-	}()
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	fmt.Println("Swagger server started on :8085")
-	swaggerRouter := router.New()
+	go apiServ()
 
-	swaggerRouter.GET("/swagger/*any", swagger.WrapHandler())
-	fasthttp.ListenAndServe(":8085", swaggerRouter.Handler)
+	go swag()
+	<-done
+	log.Println("Server's shut down")
 }
+
+func apiServ() {
+	log.Println("API server starting on :8080")
+	r := routers.GetRouter()
+	if err := fasthttp.ListenAndServe(":8080", r.Handler); err != nil {
+		log.Fatalf("API server failed: %v", err)
+	}
+}
+
+func swag() {
+	log.Println("Swagger server starting on :8085")
+	log.Println("")
+	swaggerRouter := router.New()
+	swaggerRouter.GET("/swagger/{filepath:*}", swagger.WrapHandler())
+	if err := fasthttp.ListenAndServe(":8085", swaggerRouter.Handler); err != nil {
+		log.Fatalf("Swagger server failed: %v", err)
+	}
+}
+
+//залогировать с помощью пакета log
+//запустить каждый порт в отдельной гарутине
