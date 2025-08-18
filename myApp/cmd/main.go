@@ -56,7 +56,6 @@ func apiServ(stop <-chan struct{}) {
 func swag(stop <-chan struct{}) {
 	log.Println("Swagger server starting on :8085")
 	swaggerRouter := router.New()
-	swaggerRouter.GET("/swagger/", swagger.WrapHandler())
 	swaggerRouter.GET("/swagger/{filepath:*}", swagger.WrapHandler())
 
 	server := &fasthttp.Server{
