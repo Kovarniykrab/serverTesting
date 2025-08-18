@@ -55,6 +55,7 @@ func apiServ(stop <-chan struct{}) {
 
 func swag(stop <-chan struct{}) {
 	log.Println("Swagger server starting on :8085")
+	log.Println("http://localhost:8085/swagger/index.html")
 	swaggerRouter := router.New()
 	swaggerRouter.GET("/swagger/{filepath:*}", swagger.WrapHandler())
 
