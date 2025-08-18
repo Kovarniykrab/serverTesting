@@ -16,8 +16,8 @@ import (
 // @title          TestUser API
 // @version        0.5
 // @description    API для управления пользователями
-// @host           localhost:8085
-// @BasePath       /swagger/
+// @host           localhost:8080
+// @BasePath       /api
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
 // @name                        Authorization
@@ -26,29 +26,51 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	go apiServ()
+	apiStop := make(chan struct{})
+	swaggerStop := make(chan struct{})
 
-	go swag()
+	go apiServ(apiStop)
+
+	go swag(swaggerStop)
+
 	<-done
 	log.Println("Server's shut down")
 }
 
-func apiServ() {
+func apiServ(stop <-chan struct{}) {
 	log.Println("API server starting on :8080")
-	r := routers.GetRouter()
-	if err := fasthttp.ListenAndServe(":8080", r.Handler); err != nil {
-		log.Fatalf("API server failed: %v", err)
+	server := fasthttp.Server{
+		Handler: routers.GetRouter().Handler,
 	}
+
+	go func() {
+		if err := server.ListenAndServe(":8080"); err != nil {
+			log.Printf("API server failed: %v", err)
+		}
+	}()
+
+	<-stop
+	server.Shutdown()
 }
 
-func swag() {
+func swag(stop <-chan struct{}) {
 	log.Println("Swagger server starting on :8085")
-	log.Println("")
 	swaggerRouter := router.New()
+	swaggerRouter.GET("/swagger/", swagger.WrapHandler())
 	swaggerRouter.GET("/swagger/{filepath:*}", swagger.WrapHandler())
-	if err := fasthttp.ListenAndServe(":8085", swaggerRouter.Handler); err != nil {
-		log.Fatalf("Swagger server failed: %v", err)
+
+	server := &fasthttp.Server{
+		Handler: swaggerRouter.Handler,
 	}
+
+	go func() {
+		if err := server.ListenAndServe(":8085"); err != nil {
+			log.Printf("Swagger server failed: %v", err)
+		}
+	}()
+
+	<-stop
+	server.Shutdown()
 }
 
 //залогировать с помощью пакета log
