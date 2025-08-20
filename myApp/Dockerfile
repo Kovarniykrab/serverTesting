@@ -1,13 +1,13 @@
 FROM golang:1.23-alpine AS builder
 
-WORKDIR /server
-COPY . /server
-RUN apk add make
-ENV GO111MODULE=on
-RUN go mod tidy
-RUN make build
+WORKDIR /app
+COPY go.mod go.sum ./ 
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/bin/srv
+
 FROM scratch
 
-COPY --from=builder /server/bin /server/bin
-EXPOSE  $SERVER_WEB_PORT
-CMD ["/server/bin/srv"]
+COPY --from=builder /app/bin/srv /app/bin/srv
+EXPOSE  8080
+CMD ["/app/bin/srv"]
