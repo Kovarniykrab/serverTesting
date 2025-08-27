@@ -45,12 +45,13 @@ jobs:
            id: meta
            uses: docker/metadata-action@v5.5.1
            with:
-             images: ${{ secrets.DOCKER_USERNAME }}/serverTesting
+             images: ${{ secrets.DOCKER_USERNAME }}/servertesting
                 
          - name: Build and push Docker Image
            uses: docker/build-push-action@v5
            with:
              context: .
              file: ./Dockerfile
+             platforms: linux/amd64,linux/arm64
              push: true
              tags: ${{ secrets.DOCKER_USERNAME }}/servertesting:latest
