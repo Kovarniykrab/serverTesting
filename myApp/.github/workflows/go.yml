@@ -1,13 +1,12 @@
 name: Deploy
 
 on:
-
+    workflow_dispatch:
     push:
         branches: [ "main" ]
 
     pull_request:
-        branches: [ "main" ]
-    workflow_dispatch:
+        branches: [ "main", "ci/cd" ]
 
 jobs:
      build:
