@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/Kovarniykrab/serverTesting/myApp/api/handlers"
-	"github.com/Kovarniykrab/serverTesting/myApp/api/routers"
-	_ "github.com/Kovarniykrab/serverTesting/myApp/docs"
+	"github.com/Kovarniykrab/serverTesting/api/handlers"
+	"github.com/Kovarniykrab/serverTesting/api/routers"
+	_ "github.com/Kovarniykrab/serverTesting/docs"
 	"github.com/fasthttp/router"
 	swagger "github.com/swaggo/fasthttp-swagger"
 	"github.com/valyala/fasthttp"

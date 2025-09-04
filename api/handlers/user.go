@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 
-	"github.com/Kovarniykrab/serverTesting/myApp/domain"
+	"github.com/Kovarniykrab/serverTesting/domain"
 	"github.com/valyala/fasthttp"
 )
 
@@ -252,4 +252,3 @@ func LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/swagger [POST]
-
