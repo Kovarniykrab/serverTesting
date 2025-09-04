@@ -110,7 +110,7 @@ func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      401 {object} ErrorResponse "Не авторизован"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/changePassword [PUT]
+// @Router     /api/user/change_password [PUT]
 func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 
 	id := ctx.UserValue("id").(string)
@@ -183,7 +183,7 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      404  {object}  ErrorResponse "Пользователь не найден"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/profile/ [GET]
+// @Router     /api/user/profile/id [GET]
 func GetUserHandler(ctx *fasthttp.RequestCtx) {
 	id := ctx.UserValue("id").(string)
 	if id == "" {
@@ -215,7 +215,7 @@ func GetUserHandler(ctx *fasthttp.RequestCtx) {
 // @Success      204  "Данные успешно обновлены"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/changeUser [PUT]
+// @Router     /api/user/change_user [PUT]
 func ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 
 }
@@ -241,3 +241,15 @@ func LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 	ctx.WriteString("Успешный выход")
 }
+
+// Swagger godoc
+// @Summary     документация
+// @Description документация сервера доступная только разработчикам
+// @Tags         SWAGGER
+// @Accept       json
+// @Produce      json
+// @Success      204  ""
+// @Failure      400  {object}  ErrorResponse "Неверный запрос"
+// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
+// @Router     /api/user/swagger [POST]
+

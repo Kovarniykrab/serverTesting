@@ -35,6 +35,7 @@ func main() {
 
 	<-done
 	log.Println("Server's shut down")
+
 }
 
 func apiServ(stop <-chan struct{}) {
