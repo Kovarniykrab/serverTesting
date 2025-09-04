@@ -1,4 +1,5 @@
-module github.com/Kovarniykrab/serverTesting
+
+module github.com/Kovarniykrab/serverTesting/myApp
 
 go 1.24.5
 
@@ -6,7 +7,7 @@ require (
 	github.com/fasthttp/router v1.5.4
 	github.com/swaggo/fasthttp-swagger v1.0.2
 	github.com/swaggo/swag v1.16.6
-	github.com/valyala/fasthttp v1.64.0
+	github.com/valyala/fasthttp v1.65.0
 )
 
 require (
@@ -24,10 +25,10 @@ require (
 	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38 // indirect
 	github.com/swaggo/files/v2 v2.0.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	golang.org/x/mod v0.25.0 // indirect
-	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/mod v0.26.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/text v0.27.0 // indirect
-	golang.org/x/tools v0.34.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/tools v0.35.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
