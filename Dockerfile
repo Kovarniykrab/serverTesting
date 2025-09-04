@@ -1,13 +1,13 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24.5-alpine AS builder
 
-WORKDIR /app
+WORKDIR /myApp
 COPY go.mod go.sum ./ 
-RUN go mod download
+RUN RUN go mod download && go mod verify
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/bin/srv
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /myApp/bin/srv ./cmd
 
 FROM scratch
 
-COPY --from=builder /app/bin/srv /app/bin/srv
+COPY --from=builder /myApp/bin/srv /myApp/bin/srv
 EXPOSE  8080
-CMD ["/app/bin/srv"]
+CMD ["/myApp/bin/srv"]
