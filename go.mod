@@ -1,8 +1,9 @@
-module github.com/Kovarniykrab/serverTesting/myApp
+module github.com/Kovarniykrab/serverTesting
 
 go 1.24.5
 
 require (
+	github.com/Kovarniykrab/serverTesting/myApp v0.0.0-20250904085438-03d645f0599d
 	github.com/fasthttp/router v1.5.4
 	github.com/swaggo/fasthttp-swagger v1.0.2
 	github.com/swaggo/swag v1.16.6
