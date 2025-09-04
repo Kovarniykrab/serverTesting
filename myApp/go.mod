@@ -1,4 +1,4 @@
-module github.com/Kovarniykrab/serverTesting
+module github.com/Kovarniykrab/serverTesting/myApp
 
 go 1.24.5
 
