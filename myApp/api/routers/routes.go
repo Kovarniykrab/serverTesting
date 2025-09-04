@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"github.com/Kovarniykrab/serverTesting/myApp/api/handlers"
+	"github.com/Kovarniykrab/serverTesting/api/handlers"
 	"github.com/fasthttp/router"
 )
 

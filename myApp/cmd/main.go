@@ -1,11 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/Kovarniykrab/serverTesting/myApp/api/handlers"
-	"github.com/Kovarniykrab/serverTesting/myApp/api/routers"
-	_ "github.com/Kovarniykrab/serverTesting/myApp/docs"
+	"github.com/Kovarniykrab/serverTesting/api/routers"
+	_ "github.com/Kovarniykrab/serverTesting/docs"
 	"github.com/fasthttp/router"
 	swagger "github.com/swaggo/fasthttp-swagger"
 	"github.com/valyala/fasthttp"
@@ -21,16 +23,56 @@ import (
 // @name                        Authorization
 
 func main() {
-	var _ = handlers.RegisterUserHandler
-	fmt.Println("API server started on :8080")
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	apiStop := make(chan struct{})
+	swaggerStop := make(chan struct{})
+
+	go apiServ(apiStop)
+
+	go swag(swaggerStop)
+
+	<-done
+	log.Println("Server's shut down")
+
+}
+
+func apiServ(stop <-chan struct{}) {
+	log.Println("API server starting on :8080")
+	server := fasthttp.Server{
+		Handler: routers.GetRouter().Handler,
+	}
+
 	go func() {
-		r := routers.GetRouter()
-		fasthttp.ListenAndServe(":8080", r.Handler)
+		if err := server.ListenAndServe(":8080"); err != nil {
+			log.Printf("API server failed: %v", err)
+		}
 	}()
 
-	// Запускаем Swagger на порту 8081
-	fmt.Println("Swagger server started on :8085")
-	swaggerRouter := router.New()
-	swaggerRouter.GET("/swagger/", swagger.WrapHandler())
-	fasthttp.ListenAndServe(":8085", swaggerRouter.Handler)
+	<-stop
+	server.Shutdown()
 }
+
+func swag(stop <-chan struct{}) {
+	log.Println("Swagger server starting on :8085")
+	log.Println("http://localhost:8085/swagger/index.html")
+	swaggerRouter := router.New()
+	swaggerRouter.GET("/swagger/{filepath:*}", swagger.WrapHandler())
+
+	server := &fasthttp.Server{
+		Handler: swaggerRouter.Handler,
+	}
+
+	go func() {
+		if err := server.ListenAndServe(":8085"); err != nil {
+			log.Printf("Swagger server failed: %v", err)
+		}
+	}()
+
+	<-stop
+	server.Shutdown()
+}
+
+//залогировать с помощью пакета log
+//запустить каждый порт в отдельной гарутине

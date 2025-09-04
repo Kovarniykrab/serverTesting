@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 
-	"github.com/Kovarniykrab/serverTesting/myApp/domain"
+	"github.com/Kovarniykrab/serverTesting/domain"
 	"github.com/valyala/fasthttp"
 )
 
