@@ -183,7 +183,7 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      404  {object}  ErrorResponse "Пользователь не найден"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/profile/id [GET]
+// @Router     /api/user/profile/{id} [GET]
 func GetUserHandler(ctx *fasthttp.RequestCtx) {
 	id := ctx.UserValue("id").(string)
 	if id == "" {

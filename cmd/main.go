@@ -6,8 +6,6 @@ import (
 	"github.com/Kovarniykrab/serverTesting/api/handlers"
 	"github.com/Kovarniykrab/serverTesting/api/routers"
 	_ "github.com/Kovarniykrab/serverTesting/docs"
-	"github.com/fasthttp/router"
-	swagger "github.com/swaggo/fasthttp-swagger"
 	"github.com/valyala/fasthttp"
 )
 
@@ -23,14 +21,7 @@ import (
 func main() {
 	var _ = handlers.RegisterUserHandler
 	fmt.Println("API server started on :8080")
-	go func() {
-		r := routers.GetRouter()
-		fasthttp.ListenAndServe(":8080", r.Handler)
-	}()
+	r := routers.GetRouter()
+	fasthttp.ListenAndServe(":8080", r.Handler)
 
-	// Запускаем Swagger на порту 8081
-	fmt.Println("Swagger server started on :8085")
-	swaggerRouter := router.New()
-	swaggerRouter.GET("/swagger/", swagger.WrapHandler())
-	fasthttp.ListenAndServe(":8085", swaggerRouter.Handler)
 }
