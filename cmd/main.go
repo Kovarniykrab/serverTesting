@@ -28,7 +28,7 @@ func main() {
 
 	certDirectory := "/etc/letsencrypt/live/webnode.ru"
 	certFile := filepath.Join(certDirectory, "fullchain.pem")
-	keyFile := filepath.Join(certDirectory, "privatekey.pem")
+	keyFile := filepath.Join(certDirectory, "privkey.pem")
 
 	_, certErr := os.Stat(certFile)
 	_, keyErr := os.Stat(keyFile)
@@ -46,6 +46,5 @@ func main() {
 			log.Fatalf("HTTP server failed: %v", err)
 		}
 	}
-	fasthttp.ListenAndServe(":8080", r.Handler)
 
 }
