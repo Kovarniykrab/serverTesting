@@ -10,7 +10,7 @@ func GetRouter() *router.Router {
 	routers := router.New()
 	api := routers.Group("/api")
 	swaggerRouter := routers.Group("/info")
-	swaggerRouter.GET("/swagger/", swagger.WrapHandler())
+	swaggerRouter.GET("/swagger/{any:*}", swagger.WrapHandler())
 
 	user := api.Group("/user")
 	user.GET("/profile/{id}", handlers.GetUserHandler)
