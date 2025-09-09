@@ -26,7 +26,7 @@ func main() {
 	fmt.Println("API server started on :8080")
 	r := routers.GetRouter()
 
-	certDirectory := "/etc/letsencrypt/live/webnode.ru"
+	certDirectory := "/etc/letsencrypt/live/wednode.ru"
 	certFile := filepath.Join(certDirectory, "fullchain.pem")
 	keyFile := filepath.Join(certDirectory, "privkey.pem")
 
