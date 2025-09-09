@@ -6,7 +6,7 @@
         "contact": {},
         "version": "0.5"
     },
-    "host": "localhost:8080",
+    "host": "82.147.71.226:8080",
     "basePath": "/api",
     "paths": {
         "/api/user/change_password": {

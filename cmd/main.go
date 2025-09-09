@@ -15,7 +15,7 @@ import (
 // @title          TestUser API
 // @version        0.5
 // @description    API для управления пользователями
-// @host           localhost:8080
+// @host           82.147.71.226:8080
 // @BasePath       /api
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
