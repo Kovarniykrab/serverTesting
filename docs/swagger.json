@@ -7,7 +7,7 @@
         "version": "0.5"
     },
     "host": "82.147.71.226:8080",
-    "basePath": "/api",
+    "basePath": "/",
     "paths": {
         "/api/user/change_password": {
             "put": {

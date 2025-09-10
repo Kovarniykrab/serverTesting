@@ -445,7 +445,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.5",
 	Host:             "82.147.71.226:8080",
-	BasePath:         "/api",
+	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "TestUser API",
 	Description:      "API для управления пользователями",

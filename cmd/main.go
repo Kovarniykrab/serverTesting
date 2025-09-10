@@ -16,7 +16,7 @@ import (
 // @version        0.5
 // @description    API для управления пользователями
 // @host           82.147.71.226:8080
-// @BasePath       /api
+// @BasePath       /
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
 // @name                        Authorization
