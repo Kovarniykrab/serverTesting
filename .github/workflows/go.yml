@@ -3,10 +3,10 @@ name: Deploy
 on:
     workflow_dispatch:
     push:
-      branches: [ "main", "ci/cd" ]
+      branches: [ "main" ]
 
     pull_request:
-      branches: [ "main", "ci/cd" ]
+      branches: [ "main" ]
 
 jobs:
   build:
