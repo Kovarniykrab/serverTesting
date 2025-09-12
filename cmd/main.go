@@ -8,6 +8,7 @@ import (
 
 	"github.com/Kovarniykrab/serverTesting/api/handlers"
 	"github.com/Kovarniykrab/serverTesting/api/routers"
+	"github.com/Kovarniykrab/serverTesting/database"
 	_ "github.com/Kovarniykrab/serverTesting/docs"
 	"github.com/valyala/fasthttp"
 )
@@ -15,7 +16,7 @@ import (
 // @title          TestUser API
 // @version        0.5
 // @description    API для управления пользователями
-// @host           wednode.ru:8080
+// @host
 // @BasePath       /
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
@@ -25,6 +26,12 @@ func main() {
 	var _ = handlers.RegisterUserHandler
 	fmt.Println("API server started on :8080")
 	r := routers.GetRouter()
+
+	db, err := database.DbInit()
+	if err != nil {
+		log.Fatalf("Database connection failed: %v", err)
+	}
+	defer db.Close()
 
 	certDirectory := "/etc/letsencrypt/live/wednode.ru"
 	certFile := filepath.Join(certDirectory, "fullchain.pem")
