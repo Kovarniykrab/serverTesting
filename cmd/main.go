@@ -16,7 +16,7 @@ import (
 // @title          TestUser API
 // @version        0.5
 // @description    API для управления пользователями
-// @host           wednode.ru:8080
+// @host
 // @BasePath       /
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
