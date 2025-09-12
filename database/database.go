@@ -19,7 +19,7 @@ func DbInit() (*sql.DB, error) {
 		os.Getenv("DB_SSLMODE"),
 	)
 
-	db, err := sql.Open("postgress", connStr)
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %v", err)
 	}
