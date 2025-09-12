@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func dbInit() (*sql.DB, error) {
+func DbInit() (*sql.DB, error) {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
