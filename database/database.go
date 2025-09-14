@@ -1,34 +1,34 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
-	_ "github.com/lib/pq"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
 )
 
-func DbInit() (*sql.DB, error) {
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
-		os.Getenv("DB_SSLMODE"),
-	)
+var DB *bun.DB
 
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %v", err)
+func DBInit() (*bun.DB, error) {
+	dsn := os.Getenv("SERVER_PSQL_DSN")
+	if dsn == "" {
+		log.Fatal("SERVER_PSQL_DSN environment variable is required")
 	}
 
-	err = db.Ping()
-	if err != nil {
+	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	db := bun.NewDB(sqldb, pgdialect.New())
+
+	ctx := context.Background()
+	if err := db.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %v", err)
 	}
 
-	log.Println("Sucessfully connected to database")
-	return db, nil
+	log.Println("Successfully connected to database")
+
+	return DB, nil
 }
