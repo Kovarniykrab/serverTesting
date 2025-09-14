@@ -30,5 +30,7 @@ func DBInit() (*bun.DB, error) {
 
 	log.Println("Successfully connected to database")
 
-	return DB, nil
+	DB = db
+
+	return db, nil
 }
