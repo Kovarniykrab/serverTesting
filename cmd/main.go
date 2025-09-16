@@ -41,7 +41,7 @@ func main() {
 	fmt.Println("API server started on :8080")
 	r := routers.GetRouter()
 
-	db, err := database.DBInit()
+	db, err := database.New()
 	if err != nil {
 		slog.Error("Database connection failed: %v", "error", err)
 		os.Exit(1)

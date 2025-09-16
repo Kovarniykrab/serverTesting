@@ -14,7 +14,7 @@ import (
 
 var DB *bun.DB
 
-func DBInit() (*bun.DB, error) {
+func New() (*bun.DB, error) {
 	dsn := os.Getenv("SERVER_PSQL_DSN")
 	if dsn == "" {
 		log.Fatal("SERVER_PSQL_DSN environment variable is required")
