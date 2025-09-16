@@ -4,9 +4,12 @@ go 1.24.5
 
 require (
 	github.com/fasthttp/router v1.5.4
-	github.com/lib/pq v1.10.9
+	github.com/pressly/goose/v3 v3.25.0
 	github.com/swaggo/fasthttp-swagger v1.0.2
 	github.com/swaggo/swag v1.16.6
+	github.com/uptrace/bun v1.2.15
+	github.com/uptrace/bun/dialect/pgdialect v1.2.15
+	github.com/uptrace/bun/driver/pgdriver v1.2.15
 	github.com/valyala/fasthttp v1.65.0
 )
 
@@ -23,18 +26,18 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
+	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.5.1 // indirect
 	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38 // indirect
+	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/swaggo/files/v2 v2.0.1 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
-	github.com/uptrace/bun v1.2.15 // indirect
-	github.com/uptrace/bun/dialect/pgdialect v1.2.15 // indirect
-	github.com/uptrace/bun/driver/pgdriver v1.2.15 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
 	go.opentelemetry.io/otel/trace v1.37.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/mod v0.26.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
