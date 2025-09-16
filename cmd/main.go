@@ -14,6 +14,7 @@ import (
 	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/Kovarniykrab/serverTesting/database"
 	_ "github.com/Kovarniykrab/serverTesting/docs"
+	"github.com/jessevdk/go-flags"
 	"github.com/pressly/goose/v3"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/valyala/fasthttp"
@@ -29,16 +30,25 @@ import (
 // @name                        Authorization
 
 func main() {
+
+	conf := configs.Config{}
+	parser := flags.NewParser(&conf, flags.Default)
+	if _, err := parser.Parse(); err != nil {
+		panic(err)
+	}
+
 	var _ = handlers.RegisterUserHandler
 	fmt.Println("API server started on :8080")
 	r := routers.GetRouter()
 
 	db, err := database.DBInit()
 	if err != nil {
-		slog.Error("Database connection failed: %v", err)
+		slog.Error("Database connection failed: %v", "error", err)
 		os.Exit(1)
 	}
 	defer db.Close()
+
+	migrate(conf)
 
 	certDirectory := "/etc/letsencrypt/live/wednode.ru"
 	certFile := filepath.Join(certDirectory, "fullchain.pem")
@@ -51,33 +61,18 @@ func main() {
 		fmt.Printf("SSL found. Starting HTTPS server on :8080")
 		err := fasthttp.ListenAndServeTLS(":8080", certFile, keyFile, r.Handler)
 		if err != nil {
-			slog.Error("HTTPS server failed", err)
+			slog.Error("HTTPS server failed", "error", err)
 			os.Exit(1)
 		}
 	} else {
 		fmt.Printf("SSL certificates NOT FOUND. Starting HTTP server on :8080\n")
 		err := fasthttp.ListenAndServe(":8080", r.Handler)
 		if err != nil {
-			slog.Error("HTTP server failed: %v", err)
+			slog.Error("HTTP server failed: %v", "error", err)
 			os.Exit(1)
 		}
 	}
 
-}
-
-func initLogger(level *slog.Level) *slog.Logger {
-	var logLevel slog.Level
-
-	if level == nil {
-		logLevel = slog.LevelInfo
-	} else {
-		logLevel = *level
-	}
-	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: logLevel,
-	}))
-
-	return log
 }
 
 var embedMigrations embed.FS

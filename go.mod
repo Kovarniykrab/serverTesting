@@ -4,6 +4,7 @@ go 1.24.5
 
 require (
 	github.com/fasthttp/router v1.5.4
+	github.com/jessevdk/go-flags v1.6.1
 	github.com/pressly/goose/v3 v3.25.0
 	github.com/swaggo/fasthttp-swagger v1.0.2
 	github.com/swaggo/swag v1.16.6
