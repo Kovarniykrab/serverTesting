@@ -48,7 +48,7 @@ func main() {
 	}
 	defer db.Close()
 
-	migrate(conf)
+	migrate(conf.PSQL)
 
 	certDirectory := "/etc/letsencrypt/live/wednode.ru"
 	certFile := filepath.Join(certDirectory, "fullchain.pem")
@@ -77,14 +77,14 @@ func main() {
 
 var embedMigrations embed.FS
 
-func migrate(cfg configs.Config) {
+func migrate(cfg configs.PSQL) {
 	goose.SetBaseFS(embedServer.EmbedMigrations)
 
 	if err := goose.SetDialect("postgres"); err != nil {
 		panic(err)
 	}
 
-	db := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(cfg.PSQL.DSN)))
+	db := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(cfg.DSN)))
 
 	if err := goose.Up(db, "resources/store/psql/migrations"); err != nil {
 		panic(err)
