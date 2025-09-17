@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
-	"os"
+	"log/slog"
 
+	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -14,10 +14,10 @@ import (
 
 var DB *bun.DB
 
-func New() (*bun.DB, error) {
-	dsn := os.Getenv("SERVER_PSQL_DSN")
+func New(cfg configs.PSQL) (*bun.DB, error) {
+	dsn := cfg.DSN
 	if dsn == "" {
-		log.Fatal("SERVER_PSQL_DSN environment variable is required")
+		slog.Error("SERVER_PSQL_DSN environment variable is required")
 	}
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
@@ -28,7 +28,7 @@ func New() (*bun.DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %v", err)
 	}
 
-	log.Println("Successfully connected to database")
+	slog.Info("Successfully connected to database")
 
 	DB = db
 

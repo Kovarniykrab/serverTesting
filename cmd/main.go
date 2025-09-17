@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"embed"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -38,10 +37,10 @@ func main() {
 	}
 
 	var _ = handlers.RegisterUserHandler
-	fmt.Println("API server started on :8080")
+	slog.Info("API server started on :8080")
 	r := routers.GetRouter()
 
-	db, err := database.New()
+	db, err := database.New(conf.PSQL)
 	if err != nil {
 		slog.Error("Database connection failed: %v", "error", err)
 		os.Exit(1)
@@ -58,14 +57,14 @@ func main() {
 	_, keyErr := os.Stat(keyFile)
 
 	if certErr == nil && keyErr == nil {
-		fmt.Printf("SSL found. Starting HTTPS server on :8080")
+		slog.Info("SSL found. Starting HTTPS server on :8080")
 		err := fasthttp.ListenAndServeTLS(":8080", certFile, keyFile, r.Handler)
 		if err != nil {
 			slog.Error("HTTPS server failed", "error", err)
 			os.Exit(1)
 		}
 	} else {
-		fmt.Printf("SSL certificates NOT FOUND. Starting HTTP server on :8080\n")
+		slog.Info("SSL certificates NOT FOUND. Starting HTTP server on :8080\n")
 		err := fasthttp.ListenAndServe(":8080", r.Handler)
 		if err != nil {
 			slog.Error("HTTP server failed: %v", "error", err)
