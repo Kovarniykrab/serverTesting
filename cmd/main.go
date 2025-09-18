@@ -5,7 +5,7 @@ import (
 	"embed"
 	"log/slog"
 	"os"
-	"path/filepath"
+	"strconv"
 
 	embedServer "github.com/Kovarniykrab/serverTesting"
 	"github.com/Kovarniykrab/serverTesting/api/handlers"
@@ -36,35 +36,46 @@ func main() {
 		panic(err)
 	}
 
+	slog.SetLogLoggerLevel(conf.Web.LogLevel)
+
 	var _ = handlers.RegisterUserHandler
-	slog.Info("API server started on :8080")
+	slog.Info("API server started",
+		"host", conf.Web.Host,
+		"port", conf.Web.Port)
 	r := routers.GetRouter()
 
-	db, err := database.New(conf.PSQL)
+	db, err := database.New(conf.PSQL, slog.Default())
 	if err != nil {
-		slog.Error("Database connection failed: %v", "error", err)
+		slog.Error("Database connection failed", "error", err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
 	migrate(conf.PSQL)
 
-	certDirectory := "/etc/letsencrypt/live/wednode.ru"
-	certFile := filepath.Join(certDirectory, "fullchain.pem")
-	keyFile := filepath.Join(certDirectory, "privkey.pem")
+	certFile := conf.Web.SSLSertPath
+	keyFile := conf.Web.SSLKeyPath
 
 	_, certErr := os.Stat(certFile)
 	_, keyErr := os.Stat(keyFile)
+	address := conf.Web.Host + ":" + strconv.Itoa(conf.Web.Port)
 
 	if certErr == nil && keyErr == nil {
-		slog.Info("SSL found. Starting HTTPS server on :8080")
-		err := fasthttp.ListenAndServeTLS(":8080", certFile, keyFile, r.Handler)
+		slog.Info("SSL found. Starting HTTPS server",
+			"address", address,
+			"certFile", certFile,
+			"keyFile", keyFile)
+
+		err := fasthttp.ListenAndServeTLS(address, certFile, keyFile, r.Handler)
 		if err != nil {
 			slog.Error("HTTPS server failed", "error", err)
 			os.Exit(1)
 		}
 	} else {
-		slog.Info("SSL certificates NOT FOUND. Starting HTTP server on :8080\n")
+		slog.Info("SSL certificates NOT FOUND. Starting HTTP server",
+			"address", address,
+			"certErr", certErr,
+			"keyErr", keyErr)
 		err := fasthttp.ListenAndServe(":8080", r.Handler)
 		if err != nil {
 			slog.Error("HTTP server failed: %v", "error", err)

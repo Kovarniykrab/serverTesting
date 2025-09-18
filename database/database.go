@@ -14,10 +14,15 @@ import (
 
 var DB *bun.DB
 
-func New(cfg configs.PSQL) (*bun.DB, error) {
+type Service struct {
+	log *slog.Logger
+	db  *bun.DB
+}
+
+func New(cfg configs.PSQL, log *slog.Logger) (*Service, error) {
 	dsn := cfg.DSN
 	if dsn == "" {
-		slog.Error("SERVER_PSQL_DSN environment variable is required")
+		log.Error("DSN environment variable is required")
 	}
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
@@ -28,9 +33,19 @@ func New(cfg configs.PSQL) (*bun.DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %v", err)
 	}
 
-	slog.Info("Successfully connected to database")
+	log.Info("Successfully connected to database")
 
-	DB = db
+	service := &Service{
+		log: log,
+		db:  db,
+	}
 
-	return db, nil
+	return service, nil
+}
+
+func (s *Service) Close() error {
+	if s.db != nil {
+		return s.db.Close()
+	}
+	return nil
 }
