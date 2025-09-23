@@ -61,11 +61,4 @@ type ChangePassForm struct {
 	ConfirmPass string `json:"confirm_pass"`
 }
 
-func (r *RegisterUserForm) ToUser() *User {
-	return &User{
-		Email:       r.Email,
-		Password:    r.Password,
-		Name:        r.Name,
-		DateOfBirth: r.DateOfBirth,
-	}
-}
+type Users []User
