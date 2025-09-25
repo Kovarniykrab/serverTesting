@@ -5,29 +5,22 @@ import (
 	"log/slog"
 
 	"github.com/Kovarniykrab/serverTesting/configs"
-	"github.com/Kovarniykrab/serverTesting/domain"
+	"github.com/Kovarniykrab/serverTesting/database"
 )
 
-type App struct {
-	cfg      *configs.Config
-	logger   *slog.Logger
-	Database Database
-	ctx      context.Context
+type Service struct {
+	cfg    *configs.Config
+	logger *slog.Logger
+	ctx    context.Context
+	repo   *database.Repository
 }
 
-type Database interface {
-	RegisterUser(ctx context.Context, user *domain.User) error
-	DeleteUser(ctx context.Context, id int) error
-	ChangeUser(ctx context.Context, user *domain.User) error
-	GetUser(ctx context.Context, id int) (*domain.User, error)
-}
+func New(ctx context.Context, cfg *configs.Config, logger *slog.Logger, repo *database.Repository) *Service {
 
-func New(ctx context.Context, cfg *configs.Config, logger *slog.Logger, Database Database) *App {
-
-	return &App{
-		cfg:      cfg,
-		logger:   logger,
-		Database: Database,
-		ctx:      ctx,
+	return &Service{
+		cfg:    cfg,
+		logger: logger,
+		ctx:    ctx,
+		repo:   repo,
 	}
 }

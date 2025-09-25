@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"log/slog"
@@ -8,7 +9,6 @@ import (
 	"strconv"
 
 	embedServer "github.com/Kovarniykrab/serverTesting"
-	"github.com/Kovarniykrab/serverTesting/api/handlers"
 	"github.com/Kovarniykrab/serverTesting/api/routers"
 	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/Kovarniykrab/serverTesting/database"
@@ -38,11 +38,10 @@ func main() {
 
 	slog.SetLogLoggerLevel(conf.Web.LogLevel)
 
-	var _ = handlers.RegisterUserHandler
 	slog.Info("API server started",
 		"host", conf.Web.Host,
 		"port", conf.Web.Port)
-	r := routers.GetRouter()
+	r := routers.New(context.Background(), &conf, slog.Default())
 
 	db, err := database.New(conf.PSQL, slog.Default())
 	if err != nil {
@@ -81,6 +80,7 @@ func main() {
 			slog.Error("HTTP server failed: %v", "error", err)
 			os.Exit(1)
 		}
+		slog.Info("Server starting on:")
 	}
 
 }
@@ -100,3 +100,7 @@ func migrate(cfg configs.PSQL) {
 		panic(err)
 	}
 }
+
+//логи инициализировать
+//контекст нормальные
+//запустить приложение с хендлерами

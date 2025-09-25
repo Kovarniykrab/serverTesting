@@ -14,12 +14,12 @@ import (
 
 var DB *bun.DB
 
-type Service struct {
+type Repository struct {
 	log *slog.Logger
 	db  *bun.DB
 }
 
-func New(cfg configs.PSQL, log *slog.Logger) (*Service, error) {
+func New(cfg configs.PSQL, log *slog.Logger) (*Repository, error) {
 	dsn := cfg.DSN
 	if dsn == "" {
 		log.Error("DSN environment variable is required")
@@ -35,7 +35,7 @@ func New(cfg configs.PSQL, log *slog.Logger) (*Service, error) {
 
 	log.Info("Successfully connected to database")
 
-	service := &Service{
+	service := &Repository{
 		log: log,
 		db:  db,
 	}
@@ -43,7 +43,7 @@ func New(cfg configs.PSQL, log *slog.Logger) (*Service, error) {
 	return service, nil
 }
 
-func (s *Service) Close() error {
+func (s *Repository) Close() error {
 	if s.db != nil {
 		return s.db.Close()
 	}

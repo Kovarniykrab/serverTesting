@@ -1,21 +1,24 @@
 package handlers
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/Kovarniykrab/serverTesting/application/service"
 	"github.com/Kovarniykrab/serverTesting/configs"
-	"github.com/valyala/fasthttp"
 )
 
 type App struct {
 	cfg     *configs.Config
-	service *service.App
+	Service *service.Service
 	logs    *slog.Logger
 }
 
-func New(ctx *fasthttp.RequestCtx, cfg *configs.Config, service *service.App, logs *slog.Logger) *App {
-	app := &App{cfg: cfg, service: service, logs: logs}
+func New(ctx context.Context, cfg *configs.Config, service *service.Service, logs *slog.Logger) *App {
+	app := &App{
+		cfg:     cfg,
+		Service: service,
+		logs:    logs}
 
 	return app
 }
