@@ -6,7 +6,10 @@ import (
 	"embed"
 	"log/slog"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	embedServer "github.com/Kovarniykrab/serverTesting"
 	"github.com/Kovarniykrab/serverTesting/api/routers"
@@ -35,12 +38,12 @@ func main() {
 		panic(err)
 	}
 
-	slog.SetLogLoggerLevel(conf.Web.LogLevel)
+	log := initLogger(conf)
 
-	slog.Info("API server started",
-		"host", conf.Web.Host,
-		"port", conf.Web.Port)
-	r := routers.New(context.Background(), &conf, slog.Default())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	r := routers.New(ctx, &conf, log)
 
 	migrate(conf.PSQL)
 
@@ -51,13 +54,18 @@ func main() {
 	_, keyErr := os.Stat(keyFile)
 	address := conf.Web.Host + ":" + strconv.Itoa(conf.Web.Port)
 
+	server := &fasthttp.Server{
+		Handler:     r.GetRouter().Handler,
+		ReadTimeout: 10 * time.Second,
+	}
+
 	if certErr == nil && keyErr == nil {
 		slog.Info("SSL found. Starting HTTPS server",
 			"address", address,
 			"certFile", certFile,
 			"keyFile", keyFile)
 
-		err := fasthttp.ListenAndServeTLS(address, certFile, keyFile, r.GetRouter().Handler)
+		err := server.ListenAndServeTLS(address, certFile, keyFile)
 		if err != nil {
 			slog.Error("HTTPS server failed", "error", err)
 			os.Exit(1)
@@ -67,13 +75,23 @@ func main() {
 			"address", address,
 			"certErr", certErr,
 			"keyErr", keyErr)
-		err := fasthttp.ListenAndServe(address, r.GetRouter().Handler)
+		err := server.ListenAndServe(address)
 		if err != nil {
 			slog.Error("HTTP server failed: %v", "error", err)
 			os.Exit(1)
 		}
 		slog.Info("Server starting on:")
 	}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	<-c
+
+	log.Info("Shutting down")
+
+	if err := server.Shutdown(); err != nil {
+		log.Error("Shutting down", "error", err)
+	}
+	log.Info("server stoped")
 
 }
 
@@ -93,6 +111,13 @@ func migrate(cfg configs.PSQL) {
 	}
 }
 
-//логи инициализировать
+func initLogger(conf configs.Config) *slog.Logger {
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: conf.Web.LogLevel,
+	}))
+
+	return logger
+}
+
 //контекст нормальные
 //запустить приложение с хендлерами
