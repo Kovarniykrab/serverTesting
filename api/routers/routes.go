@@ -41,13 +41,13 @@ func (app *App) GetRouter() *router.Router {
 	swaggerRouter.GET("/swagger/{any:*}", swagger.WrapHandler())
 
 	user := api.Group("/user")
-	user.GET("/profile/{id}", handlers.GetUserHandler(app.Service))
-	//user.POST("/register", handlers.RegisterUserHandler)
-	//user.PUT("/changePassword{id}", handlers.UpdatePasswordHandler)
-	//user.PUT("/changeUser", handlers.ChangeUserHandler)
-	//user.DELETE("/delete/{id}", handlers.DeleteUserHandler)
-	//user.POST("/logout", handlers.LogoutUserHandler)
-	//user.POST("/login", handlers.AuthUserHandler)
+	user.GET("/profile/{id}", app.GetUserHandler)
+	user.POST("/register", app.RegisterUserHandler)
+	user.PUT("/changePassword{id}", app.UpdatePasswordHandler)
+	user.PUT("/changeUser", app.ChangeUserHandler)
+	user.DELETE("/delete/{id}", app.DeleteUserHandler)
+	user.POST("/logout", app.LogoutUserHandler)
+	user.POST("/login", app.AuthUserHandler)
 
 	return routers
 

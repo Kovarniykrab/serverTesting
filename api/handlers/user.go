@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Kovarniykrab/serverTesting/application/service"
 	"github.com/Kovarniykrab/serverTesting/domain"
 	"github.com/valyala/fasthttp"
 )
@@ -187,25 +186,23 @@ func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      404  {object}  ErrorResponse "Пользователь не найден"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/profile/{id} [GET]
-func GetUserHandler(app *service.Service) func(*fasthttp.RequestCtx) {
-	return func(ctx *fasthttp.RequestCtx) {
-		idString := ctx.UserValue("id").(string)
-		id, err := strconv.Atoi(idString)
-		if err != nil || id == 0 {
-			ctx.SetContentType("application/json")
-			ctx.SetStatusCode(fasthttp.StatusBadRequest)
-			ctx.WriteString("Неверный ID пользователя")
-			return
-		}
-
-		user, err := app.GetUser(ctx, id)
-		if err != nil {
-			return
-		}
-		fmt.Println(user)
+func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
+	idString := ctx.UserValue("id").(string)
+	id, err := strconv.Atoi(idString)
+	if err != nil || id == 0 {
 		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusOK)
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.WriteString("Неверный ID пользователя")
+		return
 	}
+
+	user, err := app.Service.GetUser(ctx, id)
+	if err != nil {
+		return
+	}
+	fmt.Println(user)
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
 // ChangeUser godoc
