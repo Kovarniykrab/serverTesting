@@ -1,50 +1,102 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"database/sql"
+	"embed"
+	"log/slog"
 	"os"
-	"path/filepath"
+	"strconv"
 
+	embedServer "github.com/Kovarniykrab/serverTesting"
 	"github.com/Kovarniykrab/serverTesting/api/handlers"
 	"github.com/Kovarniykrab/serverTesting/api/routers"
+	"github.com/Kovarniykrab/serverTesting/configs"
+	"github.com/Kovarniykrab/serverTesting/database"
 	_ "github.com/Kovarniykrab/serverTesting/docs"
+	"github.com/jessevdk/go-flags"
+	"github.com/pressly/goose/v3"
+	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/valyala/fasthttp"
 )
 
 // @title          TestUser API
 // @version        0.5
 // @description    API для управления пользователями
-// @host           wednode.ru:8080
+// @host
 // @BasePath       /
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
 // @name                        Authorization
 
 func main() {
+
+	conf := configs.Config{}
+	parser := flags.NewParser(&conf, flags.Default)
+	if _, err := parser.Parse(); err != nil {
+		panic(err)
+	}
+
+	slog.SetLogLoggerLevel(conf.Web.LogLevel)
+
 	var _ = handlers.RegisterUserHandler
-	fmt.Println("API server started on :8080")
+	slog.Info("API server started",
+		"host", conf.Web.Host,
+		"port", conf.Web.Port)
 	r := routers.GetRouter()
 
-	certDirectory := "/etc/letsencrypt/live/wednode.ru"
-	certFile := filepath.Join(certDirectory, "fullchain.pem")
-	keyFile := filepath.Join(certDirectory, "privkey.pem")
+	db, err := database.New(conf.PSQL, slog.Default())
+	if err != nil {
+		slog.Error("Database connection failed", "error", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	migrate(conf.PSQL)
+
+	certFile := conf.Web.SSLSertPath
+	keyFile := conf.Web.SSLKeyPath
 
 	_, certErr := os.Stat(certFile)
 	_, keyErr := os.Stat(keyFile)
+	address := conf.Web.Host + ":" + strconv.Itoa(conf.Web.Port)
 
 	if certErr == nil && keyErr == nil {
-		fmt.Printf("SSL found. Starting HTTPS server on :8080")
-		err := fasthttp.ListenAndServeTLS(":8080", certFile, keyFile, r.Handler)
+		slog.Info("SSL found. Starting HTTPS server",
+			"address", address,
+			"certFile", certFile,
+			"keyFile", keyFile)
+
+		err := fasthttp.ListenAndServeTLS(address, certFile, keyFile, r.Handler)
 		if err != nil {
-			log.Fatal("HTTPS server failed", err)
+			slog.Error("HTTPS server failed", "error", err)
+			os.Exit(1)
 		}
 	} else {
-		fmt.Printf("SSL certificates NOT FOUND. Starting HTTP server on :8080\n")
+		slog.Info("SSL certificates NOT FOUND. Starting HTTP server",
+			"address", address,
+			"certErr", certErr,
+			"keyErr", keyErr)
 		err := fasthttp.ListenAndServe(":8080", r.Handler)
 		if err != nil {
-			log.Fatalf("HTTP server failed: %v", err)
+			slog.Error("HTTP server failed: %v", "error", err)
+			os.Exit(1)
 		}
 	}
 
+}
+
+var embedMigrations embed.FS
+
+func migrate(cfg configs.PSQL) {
+	goose.SetBaseFS(embedServer.EmbedMigrations)
+
+	if err := goose.SetDialect("postgres"); err != nil {
+		panic(err)
+	}
+
+	db := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(cfg.DSN)))
+
+	if err := goose.Up(db, "resources/store/psql/migrations"); err != nil {
+		panic(err)
+	}
 }

@@ -87,7 +87,6 @@ definitions:
       message:
         type: string
     type: object
-host: wednode.ru:8080
 info:
   contact: {}
   description: API для управления пользователями

@@ -6,7 +6,6 @@
         "contact": {},
         "version": "0.5"
     },
-    "host": "wednode.ru:8080",
     "basePath": "/",
     "paths": {
         "/api/user/change_password": {
