@@ -60,27 +60,27 @@ func main() {
 	}
 
 	if certErr == nil && keyErr == nil {
-		slog.Info("SSL found. Starting HTTPS server",
+		log.Info("SSL found. Starting HTTPS server",
 			"address", address,
 			"certFile", certFile,
 			"keyFile", keyFile)
 
 		err := server.ListenAndServeTLS(address, certFile, keyFile)
 		if err != nil {
-			slog.Error("HTTPS server failed", "error", err)
+			log.Error("HTTPS server failed", "error", err)
 			os.Exit(1)
 		}
 	} else {
-		slog.Info("SSL certificates NOT FOUND. Starting HTTP server",
+		log.Info("SSL certificates NOT FOUND. Starting HTTP server",
 			"address", address,
 			"certErr", certErr,
 			"keyErr", keyErr)
 		err := server.ListenAndServe(address)
 		if err != nil {
-			slog.Error("HTTP server failed: %v", "error", err)
+			log.Error("HTTP server failed: %v", "error", err)
 			os.Exit(1)
 		}
-		slog.Info("Server starting on:")
+		log.Info("Server starting on:")
 	}
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

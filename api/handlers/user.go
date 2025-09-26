@@ -198,16 +198,13 @@ func GetUserHandler(app *service.Service) func(*fasthttp.RequestCtx) {
 			return
 		}
 
-		// Теперь у вас есть доступ к app
 		user, err := app.GetUser(ctx, id)
 		if err != nil {
-			// Обработка ошибки
 			return
 		}
 		fmt.Println(user)
 		ctx.SetContentType("application/json")
 		ctx.SetStatusCode(fasthttp.StatusOK)
-		// Отправка данных пользователя
 	}
 }
 
