@@ -11,7 +11,6 @@ import (
 	embedServer "github.com/Kovarniykrab/serverTesting"
 	"github.com/Kovarniykrab/serverTesting/api/routers"
 	"github.com/Kovarniykrab/serverTesting/configs"
-	"github.com/Kovarniykrab/serverTesting/database"
 	_ "github.com/Kovarniykrab/serverTesting/docs"
 	"github.com/jessevdk/go-flags"
 	"github.com/pressly/goose/v3"
@@ -43,13 +42,6 @@ func main() {
 		"port", conf.Web.Port)
 	r := routers.New(context.Background(), &conf, slog.Default())
 
-	db, err := database.New(conf.PSQL, slog.Default())
-	if err != nil {
-		slog.Error("Database connection failed", "error", err)
-		os.Exit(1)
-	}
-	defer db.Close()
-
 	migrate(conf.PSQL)
 
 	certFile := conf.Web.SSLSertPath
@@ -65,7 +57,7 @@ func main() {
 			"certFile", certFile,
 			"keyFile", keyFile)
 
-		err := fasthttp.ListenAndServeTLS(address, certFile, keyFile, r.Handler)
+		err := fasthttp.ListenAndServeTLS(address, certFile, keyFile, r.GetRouter().Handler)
 		if err != nil {
 			slog.Error("HTTPS server failed", "error", err)
 			os.Exit(1)
@@ -75,7 +67,7 @@ func main() {
 			"address", address,
 			"certErr", certErr,
 			"keyErr", keyErr)
-		err := fasthttp.ListenAndServe(":8080", r.Handler)
+		err := fasthttp.ListenAndServe(address, r.GetRouter().Handler)
 		if err != nil {
 			slog.Error("HTTP server failed: %v", "error", err)
 			os.Exit(1)

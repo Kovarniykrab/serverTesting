@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/Kovarniykrab/serverTesting/application/service"
 	"github.com/Kovarniykrab/serverTesting/domain"
@@ -188,11 +189,12 @@ func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Router     /api/user/profile/{id} [GET]
 func GetUserHandler(app *service.Service) func(*fasthttp.RequestCtx) {
 	return func(ctx *fasthttp.RequestCtx) {
-		id := ctx.UserValue("id").(int)
-		if id == 0 {
+		idString := ctx.UserValue("id").(string)
+		id, err := strconv.Atoi(idString)
+		if err != nil || id == 0 {
 			ctx.SetContentType("application/json")
 			ctx.SetStatusCode(fasthttp.StatusBadRequest)
-			ctx.WriteString("ID пользователя не указан")
+			ctx.WriteString("Неверный ID пользователя")
 			return
 		}
 
