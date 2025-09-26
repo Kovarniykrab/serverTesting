@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"strconv"
 
 	"github.com/Kovarniykrab/serverTesting/domain"
 	"github.com/valyala/fasthttp"
@@ -23,7 +25,7 @@ import (
 // @Failure      404  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router      /api/user/register [POST]
-func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 	var user domain.RegisterUserForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
@@ -74,7 +76,7 @@ func RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      404  {object}  ErrorResponse "запрашиваемая страница не существует"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/delete/{id} [DELETE]
-func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 
 	id := ctx.UserValue("id").(string)
 	if id == "" {
@@ -111,7 +113,7 @@ func DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/change_password [PUT]
-func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 
 	id := ctx.UserValue("id").(string)
 	if id == "" {
@@ -147,7 +149,7 @@ func UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      404  {object}  ErrorResponse "Неверный Email/Password"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/login [POST]
-func AuthUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
 	var user domain.UserAuthForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
@@ -184,24 +186,23 @@ func AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      404  {object}  ErrorResponse "Пользователь не найден"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/profile/{id} [GET]
-func GetUserHandler(ctx *fasthttp.RequestCtx) {
-	id := ctx.UserValue("id").(string)
-	if id == "" {
-
+func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
+	idString := ctx.UserValue("id").(string)
+	id, err := strconv.Atoi(idString)
+	if err != nil || id == 0 {
 		ctx.SetContentType("application/json")
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.WriteString("ID пользователя не указан")
+		ctx.WriteString("Неверный ID пользователя")
 		return
 	}
 
-	//проверка существования пользователя в бд
-
-	//выдать результат
-
+	user, err := app.Service.GetUser(ctx, id)
+	if err != nil {
+		return
+	}
+	fmt.Println(user)
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	ctx.WriteString("Пользователь найден")
-
 }
 
 // ChangeUser godoc
@@ -216,7 +217,7 @@ func GetUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/change_user [PUT]
-func ChangeUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 
 }
 
@@ -231,7 +232,7 @@ func ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/logout [POST]
-func LogoutUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 
 	// проверка сущестования токена. Если токен просрочен - выход
 

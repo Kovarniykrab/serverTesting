@@ -1,17 +1,19 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"log/slog"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	embedServer "github.com/Kovarniykrab/serverTesting"
-	"github.com/Kovarniykrab/serverTesting/api/handlers"
 	"github.com/Kovarniykrab/serverTesting/api/routers"
 	"github.com/Kovarniykrab/serverTesting/configs"
-	"github.com/Kovarniykrab/serverTesting/database"
 	_ "github.com/Kovarniykrab/serverTesting/docs"
 	"github.com/jessevdk/go-flags"
 	"github.com/pressly/goose/v3"
@@ -36,20 +38,12 @@ func main() {
 		panic(err)
 	}
 
-	slog.SetLogLoggerLevel(conf.Web.LogLevel)
+	log := initLogger(conf)
 
-	var _ = handlers.RegisterUserHandler
-	slog.Info("API server started",
-		"host", conf.Web.Host,
-		"port", conf.Web.Port)
-	r := routers.GetRouter()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	db, err := database.New(conf.PSQL, slog.Default())
-	if err != nil {
-		slog.Error("Database connection failed", "error", err)
-		os.Exit(1)
-	}
-	defer db.Close()
+	r := routers.New(ctx, &conf, log)
 
 	migrate(conf.PSQL)
 
@@ -60,28 +54,44 @@ func main() {
 	_, keyErr := os.Stat(keyFile)
 	address := conf.Web.Host + ":" + strconv.Itoa(conf.Web.Port)
 
+	server := &fasthttp.Server{
+		Handler:     r.GetRouter().Handler,
+		ReadTimeout: 10 * time.Second,
+	}
+
 	if certErr == nil && keyErr == nil {
-		slog.Info("SSL found. Starting HTTPS server",
+		log.Info("SSL found. Starting HTTPS server",
 			"address", address,
 			"certFile", certFile,
 			"keyFile", keyFile)
 
-		err := fasthttp.ListenAndServeTLS(address, certFile, keyFile, r.Handler)
+		err := server.ListenAndServeTLS(address, certFile, keyFile)
 		if err != nil {
-			slog.Error("HTTPS server failed", "error", err)
+			log.Error("HTTPS server failed", "error", err)
 			os.Exit(1)
 		}
 	} else {
-		slog.Info("SSL certificates NOT FOUND. Starting HTTP server",
+		log.Info("SSL certificates NOT FOUND. Starting HTTP server",
 			"address", address,
 			"certErr", certErr,
 			"keyErr", keyErr)
-		err := fasthttp.ListenAndServe(":8080", r.Handler)
+		err := server.ListenAndServe(address)
 		if err != nil {
-			slog.Error("HTTP server failed: %v", "error", err)
+			log.Error("HTTP server failed: %v", "error", err)
 			os.Exit(1)
 		}
+		log.Info("Server starting on:")
 	}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	<-c
+
+	log.Info("Shutting down")
+
+	if err := server.Shutdown(); err != nil {
+		log.Error("Shutting down", "error", err)
+	}
+	log.Info("server stoped")
 
 }
 
@@ -100,3 +110,14 @@ func migrate(cfg configs.PSQL) {
 		panic(err)
 	}
 }
+
+func initLogger(conf configs.Config) *slog.Logger {
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: conf.Web.LogLevel,
+	}))
+
+	return logger
+}
+
+//контекст нормальные
+//запустить приложение с хендлерами

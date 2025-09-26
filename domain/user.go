@@ -1,11 +1,20 @@
 package domain
 
+import (
+	"time"
+
+	"github.com/uptrace/bun"
+)
+
 type User struct {
-	ID          int    `bun:"id" json:"id"`
-	Email       string `bun:"email" json:"email"`
-	Name        string `bun:"name" json:"name"`
-	DateOfBirth string `bun:"date_of_birth" json:"date_of_birth"`
-	Password    string `bun:"password" json:"password"`
+	bun.BaseModel `bun:"table:users,alias:u"`
+
+	ID          int       `bun:"id" json:"id"`
+	Email       string    `bun:"email" json:"email"`
+	Name        string    `bun:"name" json:"name"`
+	DateOfBirth string    `bun:"date_of_birth" json:"date_of_birth"`
+	Password    string    `bun:"password" json:"password"`
+	CreatedAt   time.Time `bun:"created_at,default:current_timestamp" json:"created_at"`
 }
 
 // форма регистрации
@@ -61,11 +70,4 @@ type ChangePassForm struct {
 	ConfirmPass string `json:"confirm_pass"`
 }
 
-func (r *RegisterUserForm) ToUser() *User {
-	return &User{
-		Email:       r.Email,
-		Password:    r.Password,
-		Name:        r.Name,
-		DateOfBirth: r.DateOfBirth,
-	}
-}
+type Users []User
