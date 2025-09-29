@@ -33,12 +33,12 @@ func (app *Service) DeleteUser(ctx context.Context, id int) error {
 	return app.repo.DeleteUser(ctx, id)
 }
 
-func (app *Service) UpdateUser(ctx context.Context, id int, form domain.ChangeUserForm) error {
-	return nil
+func (app *Service) UpdateUser(ctx context.Context, id int, form domain.ChangeUserForm) (domain.ChangeUserForm, error) {
+	return app.repo.ChangeUser(ctx, id, form)
 }
 
-func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.ChangePassForm) error {
-	return nil
+func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.ChangePassForm) (domain.ChangePassForm, error) {
+	return app.repo.ChangePassword(ctx, id, form)
 }
 
 func (app *Service) LogoutUser(ctx context.Context, id int) error {
