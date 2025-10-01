@@ -22,52 +22,52 @@ type User struct {
 type RegisterUserForm struct {
 	// Почта
 	// Поле обязательно
-	Email string `json:"email"`
+	Email string `json:"email" binding:"required"`
 	//имя пользователя
 	// Поле обязательно
-	Name string `json:"name"`
+	Name string `json:"name" binding:"required"`
 	//дата рождения
 	// Поле обязательно
-	DateOfBirth string `json:"date_of_birth"`
+	DateOfBirth string `json:"date_of_birth" binding:"required"`
 	//пароль
 	// Поле обязательно
-	Password string `json:"password"`
+	Password string `json:"password" binding:"required"`
 	//подтверждение пароля
 	// Поле обязательно
-	ConfirmPassword string `json:"confirm_password"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
 }
 
 // форма авторизации
 type UserAuthForm struct {
 	// логин
 	// Поле обязательно
-	Email string `json:"email"`
+	Email string `json:"email" binding:"required"`
 	//пароль
 	// Поле обязательно
-	Password string `json:"password"`
+	Password string `json:"password" binding:"required"`
 }
 
 // форма смены данных пользователя
 type ChangeUserForm struct {
 	//имя пользователя
 	// Поле обязательно
-	Name string `bun:"name" json:"name"`
+	Name string `bun:"name" json:"name" binding:"required"`
 	//дата рождения
 	// Поле обязательно
-	DateOfBirth string `bun:"date_of_birth" json:"date_of_birth"`
+	DateOfBirth string `bun:"date_of_birth" json:"date_of_birth" binding:"required"`
 }
 
 // форма смены пароля
 type ChangePassForm struct {
 	//cтарый пароль
 	// Поле обязательно
-	OldPassword string `json:"old_password"`
+	OldPassword string `json:"old_password" binding:"required"`
 	//новый пароль
 	// Поле обязательно
-	Password string `json:"password" bun:"password"`
+	Password string `json:"password" bun:"password" binding:"required"`
 	//подтверждение пароля
 	// Поле обязательно
-	ConfirmPass string `json:"confirm_pass"`
+	ConfirmPass string `json:"confirm_pass" binding:"required"`
 }
 
 type Users []User

@@ -2,49 +2,50 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Kovarniykrab/serverTesting/domain"
 )
 
 func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserForm) error {
-	if form.Email == "" || form.Password == "" || form.Name == "" || form.DateOfBirth == "" {
-		return errors.New("все поля обязательны")
+	user := domain.RegisterUserForm{
+		DateOfBirth:     form.DateOfBirth,
+		Name:            form.Name,
+		Email:           form.Email,
+		Password:        form.Password,
+		ConfirmPassword: form.ConfirmPassword,
 	}
-
-	if form.Password != form.ConfirmPassword {
-		return errors.New("пароли не совпадают")
-	}
-
-	existingUser, err := app.repo.GetUserByEmail(ctx, form.Email)
-	if err == nil && existingUser.ID != 0 {
-		return errors.New("email уже занят")
-	}
-
-	_, err = app.repo.RegisterUser(ctx, form)
+	err := app.re.RegisterUser(ctx, user)
 	return err
 }
 
 func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (user domain.User, err error) {
-	return app.repo.GetUserByEmail(ctx, form.Email)
+	return app.re.GetUserByEmail(ctx, form.Email)
 }
 
 func (app *Service) DeleteUser(ctx context.Context, id int) error {
-	return app.repo.DeleteUser(ctx, id)
+	return app.re.DeleteUser(ctx, id)
 }
 
 func (app *Service) UpdateUser(ctx context.Context, id int, form domain.ChangeUserForm) (domain.ChangeUserForm, error) {
-	return app.repo.ChangeUser(ctx, id, form)
+	user, err := app.re.GetUserById(ctx, id)
+	if err != nil {
+		app.logger.Error("failed to get id", "error", err)
+	}
+	if (user == domain.User{}) {
+		app.logger.Error("user no found", "id", id)
+	}
+
+	return app.re.ChangeUser(ctx, id, form)
 }
 
 func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.ChangePassForm) (domain.ChangePassForm, error) {
-	return app.repo.ChangePassword(ctx, id, form)
+	return app.re.ChangePassword(ctx, id, form)
 }
 
 func (app *Service) LogoutUser(ctx context.Context, id int) error {
 	return nil
 }
 
-func (app *Service) GetUser(ctx context.Context, id int) (user domain.User, err error) {
-	return app.repo.GetUser(ctx, id)
+func (app *Service) GetUserById(ctx context.Context, id int) (user domain.User, err error) {
+	return app.re.GetUserById(ctx, id)
 }

@@ -6,20 +6,14 @@ import (
 	"github.com/Kovarniykrab/serverTesting/domain"
 )
 
-func (rep *Repository) RegisterUser(ctx context.Context, form domain.RegisterUserForm) (domain.User, error) {
-	user := domain.User{
-		DateOfBirth: form.DateOfBirth,
-		Name:        form.Name,
-		Email:       form.Email,
-		Password:    form.Password,
-	}
+func (rep *Repository) RegisterUser(ctx context.Context, form domain.RegisterUserForm) error {
 
-	_, err := rep.db.NewInsert().Model(&user).Exec(ctx)
+	_, err := rep.db.NewInsert().Model(&form).Exec(ctx)
 	if err != nil {
 		rep.log.Error("Failed to register user", "error", err)
-		return domain.User{}, err
+		return err
 	}
-	return user, err
+	return err
 }
 
 func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
@@ -58,7 +52,7 @@ func (rep *Repository) ChangePassword(ctx context.Context, id int, form domain.C
 	return form, err
 }
 
-func (rep *Repository) GetUser(ctx context.Context, id int) (domain.User, error) {
+func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, error) {
 	user := domain.User{}
 
 	if err := rep.db.NewSelect().Model(&user).Where("id = ?", id).Scan(ctx); err != nil {

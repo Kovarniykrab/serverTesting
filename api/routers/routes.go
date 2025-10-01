@@ -19,7 +19,7 @@ type App struct {
 }
 
 func New(ctx context.Context, cfg *configs.Config, log *slog.Logger) *App {
-	db, err := database.New(cfg.PSQL, log)
+	db, err := database.New(ctx, cfg.PSQL, log)
 	if err != nil {
 		panic(err)
 	}
@@ -43,8 +43,8 @@ func (app *App) GetRouter() *router.Router {
 	user := api.Group("/user")
 	user.GET("/profile/{id}", app.GetUserHandler)
 	user.POST("/register", app.RegisterUserHandler)
-	user.PUT("/changePassword/{id}", app.UpdatePasswordHandler)
-	user.PUT("/changeUser", app.ChangeUserHandler)
+	user.PUT("/change_password/{id}", app.UpdatePasswordHandler)
+	user.PUT("/change_user", app.ChangeUserHandler)
 	user.DELETE("/delete/{id}", app.DeleteUserHandler)
 	user.POST("/logout", app.LogoutUserHandler)
 	user.POST("/login", app.AuthUserHandler)
