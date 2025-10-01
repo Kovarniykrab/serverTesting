@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"embed"
 	"log/slog"
@@ -40,9 +39,6 @@ func main() {
 
 	log := initLogger(conf)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	r := routers.New(ctx, &conf, log)
 
 	migrate(conf.PSQL)
@@ -50,8 +46,6 @@ func main() {
 	certFile := conf.Web.SSLSertPath
 	keyFile := conf.Web.SSLKeyPath
 
-	_, certErr := os.Stat(certFile)
-	_, keyErr := os.Stat(keyFile)
 	address := conf.Web.Host + ":" + strconv.Itoa(conf.Web.Port)
 
 	server := &fasthttp.Server{
@@ -59,7 +53,7 @@ func main() {
 		ReadTimeout: 10 * time.Second,
 	}
 
-	if certErr == nil && keyErr == nil {
+	if certFile != "" && keyFile != "" {
 		log.Info("SSL found. Starting HTTPS server",
 			"address", address,
 			"certFile", certFile,
@@ -73,8 +67,8 @@ func main() {
 	} else {
 		log.Info("SSL certificates NOT FOUND. Starting HTTP server",
 			"address", address,
-			"certErr", certErr,
-			"keyErr", keyErr)
+			"certFile", certFile,
+			"keyFile", keyFile)
 		err := server.ListenAndServe(address)
 		if err != nil {
 			log.Error("HTTP server failed: %v", "error", err)
@@ -119,5 +113,15 @@ func initLogger(conf configs.Config) *slog.Logger {
 	return logger
 }
 
-//контекст нормальные
-//запустить приложение с хендлерами
+// в сервисе проверки регистрации поднять в хендлеры
+// разделить ошибки и не делать их вместе и не дублировать проверки
+//sql no found маяк посмотреть
+// в апдейт проверить пользователя по id, если есть, то только тогда апдейт
+// getUserById перевести к единому стилю
+// в регистрации датабейз убрать форму и перенести ее в сервис
+// доставать сертификаты через енвы
+// проверка сертификатов только на нил и все
+// поправить свагер и хендлеры
+//контекст из базы данных в майн через фабрику New database
+//доменные модели добавить required
+//

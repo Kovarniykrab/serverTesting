@@ -6,57 +6,66 @@ import (
 	"github.com/Kovarniykrab/serverTesting/domain"
 )
 
-func (db *Repository) RegisterUser(ctx context.Context, form domain.RegisterUserForm) (domain.User, error) {
-	user := domain.User{
-		DateOfBirth: form.DateOfBirth,
-		Name:        form.Name,
-		Email:       form.Email,
-		Password:    form.Password,
-	}
+func (rep *Repository) RegisterUser(ctx context.Context, form domain.RegisterUserForm) error {
 
-	_, err := db.db.NewInsert().Model(&user).Exec(ctx)
+	_, err := rep.db.NewInsert().Model(&form).Exec(ctx)
 	if err != nil {
-		db.log.Error("Failed to register user", "error", err)
-		return domain.User{}, err
+		rep.log.Error("Failed to register user", "error", err)
+		return err
 	}
-	return user, err
+	return err
 }
 
-func (db *Repository) DeleteUser(ctx context.Context, id int) error {
-	a, err := db.db.NewDelete().Model(&domain.User{ID: id}).
+func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
+	a, err := rep.db.NewDelete().Model(&domain.User{ID: id}).
 		WherePK().Exec(ctx)
 	if err != nil {
 		return err
 	}
-	db.log.Debug("Delete", "deteled user", a)
+	rep.log.Debug("Delete", "deteled user", a)
 	return err
 }
 
-func (db *Repository) ChangeUser(ctx context.Context, form domain.ChangeUserForm) (domain.ChangeUserForm, error) {
-	if _, err := db.db.NewInsert().
-		Model(&form).
-		On("CONFLICT (id) DO UPDATE").
-		Exec(ctx); err != nil {
-		return form, err
+func (rep *Repository) ChangeUser(ctx context.Context, id int, form domain.ChangeUserForm) (domain.ChangeUserForm, error) {
+	user := domain.User{
+		ID:          id,
+		Name:        form.Name,
+		DateOfBirth: form.DateOfBirth,
 	}
 
-	return form, nil
+	_, err := rep.db.NewUpdate().
+		Model(&user).
+		Where("id = ?", id).
+		Exec(ctx)
+	return form, err
 }
 
-func (db *Repository) GetUser(ctx context.Context, id int) (domain.User, error) {
+func (rep *Repository) ChangePassword(ctx context.Context, id int, form domain.ChangePassForm) (domain.ChangePassForm, error) {
+	_, err := rep.db.NewUpdate().
+		Model(&domain.User{
+			ID:       id,
+			Password: form.Password,
+		}).
+		Column("password").
+		Where("id = ?", id).
+		Exec(ctx)
+	return form, err
+}
+
+func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, error) {
 	user := domain.User{}
 
-	if err := db.db.NewSelect().Model(&user).Where("id = ?", id).Scan(ctx); err != nil {
+	if err := rep.db.NewSelect().Model(&user).Where("id = ?", id).Scan(ctx); err != nil {
 		return user, err
 	}
 
 	return user, nil
 }
 
-func (db *Repository) GetUserByEmail(ctx context.Context, Email string) (domain.User, error) {
+func (rep *Repository) GetUserByEmail(ctx context.Context, Email string) (domain.User, error) {
 	user := domain.User{}
 
-	if err := db.db.NewSelect().Model(&user).Where("Email = ?", Email).Scan(ctx); err != nil {
+	if err := rep.db.NewSelect().Model(&user).Where("Email = ?", Email).Scan(ctx); err != nil {
 		return user, err
 	}
 
