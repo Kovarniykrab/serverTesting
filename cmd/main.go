@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"log/slog"
@@ -30,6 +31,7 @@ import (
 // @name                        Authorization
 
 func main() {
+	ctx := context.Background()
 
 	conf := configs.Config{}
 	parser := flags.NewParser(&conf, flags.Default)
@@ -38,10 +40,13 @@ func main() {
 	}
 
 	log := initLogger(conf)
+	log.Info("Starting app")
+
+	log.Info("starting migrate")
+	migrate(conf.PSQL)
 
 	r := routers.New(ctx, &conf, log)
-
-	migrate(conf.PSQL)
+	log.Info("routers init")
 
 	certFile := conf.Web.SSLSertPath
 	keyFile := conf.Web.SSLKeyPath
@@ -113,15 +118,15 @@ func initLogger(conf configs.Config) *slog.Logger {
 	return logger
 }
 
-// в сервисе проверки регистрации поднять в хендлеры
-// разделить ошибки и не делать их вместе и не дублировать проверки
-//sql no found маяк посмотреть
-// в апдейт проверить пользователя по id, если есть, то только тогда апдейт
-// getUserById перевести к единому стилю
-// в регистрации датабейз убрать форму и перенести ее в сервис
-// доставать сертификаты через енвы
-// проверка сертификатов только на нил и все
-// поправить свагер и хендлеры
-//контекст из базы данных в майн через фабрику New database
-//доменные модели добавить required
+// в сервисе проверки регистрации поднять в хендлеры +
+// разделить ошибки и не делать их вместе и не дублировать проверки ?
+//sql no found маяк посмотреть ---
+// в апдейт проверить пользователя по id, если есть, то только тогда апдейт +
+// getUserById перевести к единому стилю +
+// в регистрации датабейз убрать форму и перенести ее в сервис +
+// доставать сертификаты через енвы +-
+// проверка сертификатов только на нил и все +
+// поправить свагер и хендлеры +
+//контекст из базы данных в майн через фабрику New database ---
+//доменные модели добавить required +
 //

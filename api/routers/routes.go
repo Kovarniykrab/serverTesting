@@ -19,13 +19,14 @@ type App struct {
 }
 
 func New(ctx context.Context, cfg *configs.Config, log *slog.Logger) *App {
+
 	db, err := database.New(ctx, cfg.PSQL, log)
 	if err != nil {
 		panic(err)
 	}
 
-	srv := service.New(ctx, cfg, log, db)
-	hand := handlers.New(ctx, cfg, srv, log)
+	srv := service.New(cfg, log, db)
+	hand := handlers.New(cfg, srv, log)
 
 	return &App{
 		App:    *hand,

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/uptrace/bun"
@@ -13,10 +14,8 @@ import (
 )
 
 type Repository struct {
-	log    *slog.Logger
-	db     *bun.DB
-	ctx    context.Context
-	cancel context.CancelFunc
+	log *slog.Logger
+	db  *bun.DB
 }
 
 func New(ctx context.Context, cfg configs.PSQL, log *slog.Logger) (*Repository, error) {
@@ -25,30 +24,27 @@ func New(ctx context.Context, cfg configs.PSQL, log *slog.Logger) (*Repository, 
 		log.Error("DSN environment variable is required")
 	}
 
+	context, ctxCancel := context.WithTimeout(ctx, 15*time.Second)
+	defer ctxCancel()
+
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqldb, pgdialect.New())
-	ctx, cancel := context.WithCancel(context.Background())
-	if err := db.PingContext(ctx); err != nil {
-		cancel()
+
+	if err := db.PingContext(context); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %v", err)
 	}
 
 	log.Info("Successfully connected to database")
 
 	service := &Repository{
-		log:    log,
-		db:     db,
-		ctx:    ctx,
-		cancel: cancel,
+		log: log,
+		db:  db,
 	}
 
 	return service, nil
 }
 
 func (s *Repository) Close() error {
-	if s.cancel != nil {
-		s.cancel()
-	}
 
 	if s.db != nil {
 		return s.db.Close()

@@ -17,6 +17,7 @@ func (rep *Repository) RegisterUser(ctx context.Context, form domain.RegisterUse
 }
 
 func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
+
 	a, err := rep.db.NewDelete().Model(&domain.User{ID: id}).
 		WherePK().Exec(ctx)
 	if err != nil {
@@ -27,6 +28,7 @@ func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
 }
 
 func (rep *Repository) ChangeUser(ctx context.Context, id int, form domain.ChangeUserForm) (domain.ChangeUserForm, error) {
+
 	user := domain.User{
 		ID:          id,
 		Name:        form.Name,
@@ -41,6 +43,7 @@ func (rep *Repository) ChangeUser(ctx context.Context, id int, form domain.Chang
 }
 
 func (rep *Repository) ChangePassword(ctx context.Context, id int, form domain.ChangePassForm) (domain.ChangePassForm, error) {
+
 	_, err := rep.db.NewUpdate().
 		Model(&domain.User{
 			ID:       id,
@@ -53,6 +56,7 @@ func (rep *Repository) ChangePassword(ctx context.Context, id int, form domain.C
 }
 
 func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, error) {
+
 	user := domain.User{}
 
 	if err := rep.db.NewSelect().Model(&user).Where("id = ?", id).Scan(ctx); err != nil {
@@ -63,6 +67,7 @@ func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, er
 }
 
 func (rep *Repository) GetUserByEmail(ctx context.Context, Email string) (domain.User, error) {
+
 	user := domain.User{}
 
 	if err := rep.db.NewSelect().Model(&user).Where("Email = ?", Email).Scan(ctx); err != nil {
