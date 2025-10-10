@@ -9,7 +9,7 @@ import (
 type User struct {
 	bun.BaseModel `bun:"table:users,alias:u"`
 
-	ID          int       `bun:"id" json:"id"`
+	ID          int       `bun:"id,pk,autoincrement" json:"id"`
 	Email       string    `bun:"email" json:"email"`
 	Name        string    `bun:"name" json:"name"`
 	DateOfBirth string    `bun:"date_of_birth" json:"date_of_birth"`
