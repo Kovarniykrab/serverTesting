@@ -2,49 +2,90 @@ package service
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"time"
 
 	"github.com/Kovarniykrab/serverTesting/domain"
 )
 
 func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserForm) error {
-	if form.Email == "" || form.Password == "" || form.Name == "" || form.DateOfBirth == "" {
-		return errors.New("все поля обязательны")
+
+	busyEmail, err := app.re.GetUserByEmail(ctx, form.Email)
+	if err == nil && busyEmail.ID != 0 {
+		app.logger.Error("Email is busy", "error", form.Email)
+		return fmt.Errorf("email уже занят")
 	}
 
 	if form.Password != form.ConfirmPassword {
-		return errors.New("пароли не совпадают")
+		app.logger.Error("password don't match", "error", form.Password)
+		return fmt.Errorf("пароли не совпадают")
 	}
 
-	existingUser, err := app.repo.GetUserByEmail(ctx, form.Email)
-	if err == nil && existingUser.ID != 0 {
-		return errors.New("email уже занят")
+	user := domain.User{
+		DateOfBirth: form.DateOfBirth,
+		Name:        form.Name,
+		Email:       form.Email,
+		Password:    form.Password,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
-
-	_, err = app.repo.RegisterUser(ctx, form)
-	return err
+	return app.re.RegisterUser(ctx, user)
 }
 
 func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (user domain.User, err error) {
-	return app.repo.GetUserByEmail(ctx, form.Email)
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	return app.re.GetUserByEmail(ctx, form.Email)
 }
 
 func (app *Service) DeleteUser(ctx context.Context, id int) error {
-	return app.repo.DeleteUser(ctx, id)
+
+	_, err := app.re.GetUserById(ctx, id)
+	if err != nil {
+		return fmt.Errorf("пользователь не найден")
+	}
+	return app.re.DeleteUser(ctx, id)
 }
 
 func (app *Service) UpdateUser(ctx context.Context, id int, form domain.ChangeUserForm) error {
-	return nil
+
+	user, err := app.re.GetUserById(ctx, id)
+	if err != nil {
+		app.logger.Error("failed to get id", "error", err)
+	}
+
+	user.Name = form.Name
+	user.DateOfBirth = form.DateOfBirth
+	user.UpdatedAt = time.Now()
+
+	return app.re.UpdateUser(ctx, user)
 }
 
 func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.ChangePassForm) error {
-	return nil
+
+	if form.OldPassword != form.Password {
+		return fmt.Errorf("пароли не совпадают")
+	}
+
+	user, err := app.re.GetUserById(ctx, id)
+	if err != nil {
+		return fmt.Errorf("пользователь не найден")
+	}
+
+	user.Password = form.Password
+	user.UpdatedAt = time.Now()
+
+	return app.re.ChangePassword(ctx, id, form)
 }
 
 func (app *Service) LogoutUser(ctx context.Context, id int) error {
+
 	return nil
 }
 
-func (app *Service) GetUser(ctx context.Context, id int) (user domain.User, err error) {
-	return app.repo.GetUser(ctx, id)
+func (app *Service) GetUserById(ctx context.Context, id int) (user domain.User, err error) {
+
+	return app.re.GetUserById(ctx, id)
 }

@@ -1,5 +1,11 @@
 package handlers
 
+import (
+	"encoding/json"
+
+	"github.com/valyala/fasthttp"
+)
+
 // SuccessResponse - успешный ответ
 type SuccessResponse struct {
 	Message string `json:"message"`
@@ -13,4 +19,22 @@ type ErrorResponse struct {
 // AuthResponse - токен
 type AuthResponse struct {
 	JWTToken string `json:"JWT"`
+}
+
+func (app *App) sendErrorResponse(ctx *fasthttp.RequestCtx, statusCode int, message string) {
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(statusCode)
+	response := ErrorResponse{Error: message}
+	if jsonData, err := json.Marshal(response); err == nil {
+		ctx.Write(jsonData)
+	}
+}
+
+func (app *App) sendSuccessResponse(ctx *fasthttp.RequestCtx, statusCode int, message string) {
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(statusCode)
+	response := SuccessResponse{Message: message}
+	if jsonData, err := json.Marshal(response); err == nil {
+		ctx.Write(jsonData)
+	}
 }

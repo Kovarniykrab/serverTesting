@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"log/slog"
 
 	"github.com/Kovarniykrab/serverTesting/application/service"
@@ -14,7 +13,7 @@ type App struct {
 	logs    *slog.Logger
 }
 
-func New(ctx context.Context, cfg *configs.Config, service *service.Service, logs *slog.Logger) *App {
+func New(cfg *configs.Config, service *service.Service, logs *slog.Logger) *App {
 	app := &App{
 		cfg:     cfg,
 		Service: service,

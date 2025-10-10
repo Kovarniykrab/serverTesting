@@ -31,6 +31,7 @@ import (
 // @name                        Authorization
 
 func main() {
+	ctx := context.Background()
 
 	conf := configs.Config{}
 	parser := flags.NewParser(&conf, flags.Default)
@@ -39,19 +40,14 @@ func main() {
 	}
 
 	log := initLogger(conf)
+	log.Info("Starting app")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	r := routers.New(ctx, &conf, log)
-
+	log.Info("starting migrate")
 	migrate(conf.PSQL)
 
-	certFile := conf.Web.SSLSertPath
-	keyFile := conf.Web.SSLKeyPath
+	r := routers.New(ctx, &conf, log)
+	log.Info("routers init")
 
-	_, certErr := os.Stat(certFile)
-	_, keyErr := os.Stat(keyFile)
 	address := conf.Web.Host + ":" + strconv.Itoa(conf.Web.Port)
 
 	server := &fasthttp.Server{
@@ -59,13 +55,13 @@ func main() {
 		ReadTimeout: 10 * time.Second,
 	}
 
-	if certErr == nil && keyErr == nil {
+	if conf.Web.SSLSertPath != "" && conf.Web.SSLKeyPath != "" {
 		log.Info("SSL found. Starting HTTPS server",
 			"address", address,
-			"certFile", certFile,
-			"keyFile", keyFile)
+			"certFile", conf.Web.SSLSertPath,
+			"keyFile", conf.Web.SSLKeyPath)
 
-		err := server.ListenAndServeTLS(address, certFile, keyFile)
+		err := server.ListenAndServeTLS(address, conf.Web.SSLSertPath, conf.Web.SSLKeyPath)
 		if err != nil {
 			log.Error("HTTPS server failed", "error", err)
 			os.Exit(1)
@@ -73,8 +69,8 @@ func main() {
 	} else {
 		log.Info("SSL certificates NOT FOUND. Starting HTTP server",
 			"address", address,
-			"certErr", certErr,
-			"keyErr", keyErr)
+			"certFile", conf.Web.SSLSertPath,
+			"keyFile", conf.Web.SSLKeyPath)
 		err := server.ListenAndServe(address)
 		if err != nil {
 			log.Error("HTTP server failed: %v", "error", err)
@@ -83,7 +79,9 @@ func main() {
 		log.Info("Server starting on:")
 	}
 	c := make(chan os.Signal, 1)
+
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
 	<-c
 
 	log.Info("Shutting down")
@@ -91,6 +89,7 @@ func main() {
 	if err := server.Shutdown(); err != nil {
 		log.Error("Shutting down", "error", err)
 	}
+
 	log.Info("server stoped")
 
 }
@@ -119,5 +118,14 @@ func initLogger(conf configs.Config) *slog.Logger {
 	return logger
 }
 
-//контекст нормальные
-//запустить приложение с хендлерами
+// в сервисе проверки регистрации поднять в хендлеры +
+// разделить ошибки и не делать их вместе и не дублировать проверки ?
+//sql no found маяк посмотреть ---
+// в апдейт проверить пользователя по id, если есть, то только тогда апдейт +
+// getUserById перевести к единому стилю +
+// в регистрации датабейз убрать форму и перенести ее в сервис +
+// доставать сертификаты через енвы +-
+// проверка сертификатов только на нил и все +
+// поправить свагер и хендлеры +
+//доменные модели добавить required +
+//
