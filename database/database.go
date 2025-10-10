@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/uptrace/bun"
@@ -24,8 +23,7 @@ func New(ctx context.Context, cfg configs.PSQL, log *slog.Logger) (*Repository, 
 		log.Error("DSN environment variable is required")
 	}
 
-	context, ctxCancel := context.WithTimeout(ctx, 15*time.Second)
-	defer ctxCancel()
+	context := context.Background()
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqldb, pgdialect.New())

@@ -6,7 +6,7 @@ import (
 	"github.com/Kovarniykrab/serverTesting/domain"
 )
 
-func (rep *Repository) RegisterUser(ctx context.Context, form domain.RegisterUserForm) error {
+func (rep *Repository) RegisterUser(ctx context.Context, form domain.User) error {
 
 	_, err := rep.db.NewInsert().Model(&form).Exec(ctx)
 	if err != nil {
@@ -18,8 +18,7 @@ func (rep *Repository) RegisterUser(ctx context.Context, form domain.RegisterUse
 
 func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
 
-	a, err := rep.db.NewDelete().Model(&domain.User{ID: id}).
-		WherePK().Exec(ctx)
+	a, err := rep.db.NewDelete().Model(&domain.User{ID: id}).WherePK().Exec(ctx)
 	if err != nil {
 		return err
 	}
@@ -27,32 +26,27 @@ func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
 	return err
 }
 
-func (rep *Repository) ChangeUser(ctx context.Context, id int, form domain.ChangeUserForm) (domain.ChangeUserForm, error) {
+func (rep *Repository) UpdateUser(ctx context.Context, user domain.User) error {
 
-	user := domain.User{
-		ID:          id,
-		Name:        form.Name,
-		DateOfBirth: form.DateOfBirth,
+	_, err := rep.db.NewUpdate().Model(&user).WherePK().Exec(ctx)
+	if err != nil {
+		rep.log.Error("Failed to update user", "error", err)
+		return err
 	}
-
-	_, err := rep.db.NewUpdate().
-		Model(&user).
-		Where("id = ?", id).
-		Exec(ctx)
-	return form, err
+	return err
 }
 
-func (rep *Repository) ChangePassword(ctx context.Context, id int, form domain.ChangePassForm) (domain.ChangePassForm, error) {
+func (rep *Repository) ChangePassword(ctx context.Context, id int, form domain.ChangePassForm) error {
 
 	_, err := rep.db.NewUpdate().
 		Model(&domain.User{
 			ID:       id,
 			Password: form.Password,
 		}).
-		Column("password").
+		Column("password", "updated_at").
 		Where("id = ?", id).
 		Exec(ctx)
-	return form, err
+	return err
 }
 
 func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, error) {
@@ -60,7 +54,8 @@ func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, er
 	user := domain.User{}
 
 	if err := rep.db.NewSelect().Model(&user).Where("id = ?", id).Scan(ctx); err != nil {
-		return user, err
+		rep.log.Error("Failed to get user by id", "error", err)
+		return domain.User{}, err
 	}
 
 	return user, nil
@@ -71,7 +66,8 @@ func (rep *Repository) GetUserByEmail(ctx context.Context, Email string) (domain
 	user := domain.User{}
 
 	if err := rep.db.NewSelect().Model(&user).Where("Email = ?", Email).Scan(ctx); err != nil {
-		return user, err
+		rep.log.Error("Failed to get user by email", "error", err)
+		return domain.User{}, err
 	}
 
 	return user, nil

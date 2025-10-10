@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/Kovarniykrab/serverTesting/domain"
@@ -26,41 +25,21 @@ import (
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router      /api/user/register [POST]
 func (app *App) RegisterUserHandler(ctx *fasthttp.RequestCtx) {
-	var user domain.RegisterUserForm
+	var form domain.RegisterUserForm
 
-	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
-
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.WriteString("неверный формат данных")
+	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный формат данных")
 		return
 	}
 
-	if user.Email == "" || user.Password == "" {
-
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.WriteString("Email и пароль обязательны")
+	if err := app.Service.RegisterUser(ctx, form); err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err.Error())
 		return
 	}
 
-	// проверка занят ли login и email и телефон
-
-	if user.ConfirmPassword != user.Password {
-
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.WriteString("пароли должны совпадать!")
-		return
-	}
-
-	//генерация хеш из пароля
+	app.sendSuccessResponse(ctx, fasthttp.StatusCreated, "Пользователь успешно зарегистрирован")
 
 	//запись данных в бд
-
-	ctx.SetContentType("application/json")
-	ctx.SetStatusCode(fasthttp.StatusCreated)
-	ctx.WriteString("Пользователь успешно зарегистрирован")
 }
 
 // DeleteUser godoc
@@ -78,25 +57,19 @@ func (app *App) RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 // @Router     /api/user/delete/{id} [DELETE]
 func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 
-	id := ctx.UserValue("id").(string)
-	if id == "" {
-
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.WriteString("ID пользователя не указан")
+	idStr := ctx.UserValue("id").(string)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
 		return
 	}
 
-	//проверка авторизации пользователя
+	if err := app.Service.DeleteUser(ctx, id); err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, err.Error())
+		return
+	}
 
-	// проверка существования пользователя по id
-
-	//подтверждение пароля перед удалением
-
-	//удаление пользователя
-
-	ctx.SetStatusCode(fasthttp.StatusNoContent)
-	ctx.WriteString("Пользователь успешно удален")
+	app.sendSuccessResponse(ctx, fasthttp.StatusNoContent, "Пользователь успешно удален")
 }
 
 // UpdatePassword godoc
@@ -115,21 +88,25 @@ func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 // @Router     /api/user//change_password/{id} [PUT]
 func (app *App) UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 
-	id := ctx.UserValue("id").(string)
-	if id == "" {
-
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.WriteString("ID пользователя не указан")
+	idStr := ctx.UserValue("id").(string)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
 		return
 	}
 
-	//проверка существования пользователя по id
+	var form domain.ChangePassForm
+	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный формат данных")
+		return
+	}
 
-	//обновление данных
-	ctx.SetContentType("application/json")
-	ctx.SetStatusCode(fasthttp.StatusOK)
-	ctx.WriteString("Пользователь успешно изменен")
+	if err := app.Service.UpdatePassword(ctx, id, form); err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err.Error())
+		return
+	}
+
+	app.sendSuccessResponse(ctx, fasthttp.StatusOK, "Пароль успешно изменен")
 
 }
 
@@ -187,22 +164,24 @@ func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/profile/{id} [GET]
 func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
-	idString := ctx.UserValue("id").(string)
-	id, err := strconv.Atoi(idString)
-	if err != nil || id == 0 {
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.WriteString("Неверный ID пользователя")
+	idStr := ctx.UserValue("id").(string)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
 		return
 	}
 
 	user, err := app.Service.GetUserById(ctx, id)
 	if err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, "Пользователь не найден")
 		return
 	}
-	fmt.Println(user)
+
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
+	if jsonData, err := json.Marshal(user); err == nil {
+		ctx.Write(jsonData)
+	}
 }
 
 // ChangeUser godoc
@@ -219,6 +198,26 @@ func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
 // @Router     /api/user/change_user [PUT]
 func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 
+	idStr := ctx.UserValue("id").(string)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
+		return
+	}
+
+	var form domain.ChangeUserForm
+
+	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный формат данных")
+		return
+	}
+
+	if err := app.Service.UpdateUser(ctx, id, form); err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err.Error())
+		return
+	}
+
+	app.sendSuccessResponse(ctx, fasthttp.StatusNoContent, "Данные успешно обновлены")
 }
 
 // LogoutUser godoc

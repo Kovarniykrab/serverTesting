@@ -15,6 +15,7 @@ type User struct {
 	DateOfBirth string    `bun:"date_of_birth" json:"date_of_birth"`
 	Password    string    `bun:"password" json:"password"`
 	CreatedAt   time.Time `bun:"created_at,default:current_timestamp" json:"created_at"`
+	UpdatedAt   time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
 }
 
 // форма регистрации
@@ -55,6 +56,8 @@ type ChangeUserForm struct {
 	//дата рождения
 	// Поле обязательно
 	DateOfBirth string `bun:"date_of_birth" json:"date_of_birth" binding:"required"`
+
+	UpdatedAt string `bun:"updated_at" json:"updated_at" binding:"required"`
 }
 
 // форма смены пароля
@@ -68,6 +71,7 @@ type ChangePassForm struct {
 	//подтверждение пароля
 	// Поле обязательно
 	ConfirmPass string `json:"confirm_pass" binding:"required"`
+	UpdatedAt   string `bun:"updated_at" json:"updated_at" binding:"required"`
 }
 
 type Users []User
