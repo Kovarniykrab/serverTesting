@@ -13,10 +13,12 @@ func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserFo
 	busyEmail, err := app.re.GetUserByEmail(ctx, form.Email)
 	if err == nil && busyEmail.ID != 0 {
 		app.logger.Error("Email is busy", "error", form.Email)
+		return fmt.Errorf("email уже занят")
 	}
 
 	if form.Password != form.ConfirmPassword {
 		app.logger.Error("password don't match", "error", form.Password)
+		return fmt.Errorf("пароли не совпадают")
 	}
 
 	user := domain.User{
@@ -27,8 +29,7 @@ func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserFo
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	err = app.re.RegisterUser(ctx, user)
-	return err
+	return app.re.RegisterUser(ctx, user)
 }
 
 func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (user domain.User, err error) {
