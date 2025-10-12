@@ -77,11 +77,11 @@ func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.Chan
 	}
 
 	if err = Compare(user.Password, form.OldPassword); err != nil {
-		return fmt.Errorf("пароли не совпадают")
+		return fmt.Errorf("старый пароль не верен")
 	}
 
 	if form.Password != form.ConfirmPass {
-		return fmt.Errorf("новые пароли не совпадают")
+		return fmt.Errorf("пароли не совпадают")
 	}
 
 	hashPassword, err := app.Hash(form.Password)
