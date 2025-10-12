@@ -76,7 +76,7 @@ func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.Chan
 		return fmt.Errorf("пользователь не найден")
 	}
 
-	if err = Compare(user.Password, form.Password); err != nil {
+	if err = Compare(user.Password, form.OldPassword); err != nil {
 		return fmt.Errorf("пароли не совпадают")
 	}
 
