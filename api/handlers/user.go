@@ -195,7 +195,7 @@ func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
 // @Success      204  "Данные успешно обновлены"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/change_user [PUT]
+// @Router     /api/user/change_user/{id} [PUT]
 func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 
 	idStr := ctx.UserValue("id").(string)

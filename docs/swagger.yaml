@@ -17,6 +17,13 @@ definitions:
           новый пароль
           Поле обязательно
         type: string
+      updated_at:
+        type: string
+    required:
+    - confirm_pass
+    - old_password
+    - password
+    - updated_at
     type: object
   domain.ChangeUserForm:
     properties:
@@ -30,6 +37,12 @@ definitions:
           имя пользователя
           Поле обязательно
         type: string
+      updated_at:
+        type: string
+    required:
+    - date_of_birth
+    - name
+    - updated_at
     type: object
   domain.RegisterUserForm:
     properties:
@@ -58,6 +71,12 @@ definitions:
           пароль
           Поле обязательно
         type: string
+    required:
+    - confirm_password
+    - date_of_birth
+    - email
+    - name
+    - password
     type: object
   domain.UserAuthForm:
     properties:
@@ -71,6 +90,9 @@ definitions:
           пароль
           Поле обязательно
         type: string
+    required:
+    - email
+    - password
     type: object
   handlers.AuthResponse:
     properties:
@@ -93,7 +115,7 @@ info:
   title: TestUser API
   version: "0.5"
 paths:
-  /api/user/change_password:
+  /api/user//change_password/{id}:
     put:
       consumes:
       - application/json
@@ -128,7 +150,7 @@ paths:
       summary: изменение пользователя
       tags:
       - USER
-  /api/user/change_user:
+  /api/user/change_user/{id}:
     put:
       consumes:
       - application/json

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Kovarniykrab/serverTesting/domain"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserForm) error {
@@ -21,11 +22,16 @@ func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserFo
 		return fmt.Errorf("пароли не совпадают")
 	}
 
+	hashPassword, e := app.Hash(form.Password)
+	if e != nil {
+		return e
+	}
+
 	user := domain.User{
 		DateOfBirth: form.DateOfBirth,
 		Name:        form.Name,
 		Email:       form.Email,
-		Password:    form.Password,
+		Password:    hashPassword,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -65,19 +71,25 @@ func (app *Service) UpdateUser(ctx context.Context, id int, form domain.ChangeUs
 
 func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.ChangePassForm) error {
 
-	if form.OldPassword != form.Password {
-		return fmt.Errorf("пароли не совпадают")
-	}
-
 	user, err := app.re.GetUserById(ctx, id)
 	if err != nil {
 		return fmt.Errorf("пользователь не найден")
 	}
 
-	user.Password = form.Password
-	user.UpdatedAt = time.Now()
+	if form.OldPassword != user.Password {
+		return fmt.Errorf("пароли не совпадают")
+	}
 
-	return app.re.ChangePassword(ctx, id, form)
+	if form.Password != form.ConfirmPass {
+		return fmt.Errorf("новые пароли не совпадают")
+	}
+
+	hashPassword, err := app.Hash(form.Password)
+	if err != nil {
+		return err
+	}
+
+	return app.re.ChangePassword(ctx, id, hashPassword)
 }
 
 func (app *Service) LogoutUser(ctx context.Context, id int) error {
@@ -88,4 +100,15 @@ func (app *Service) LogoutUser(ctx context.Context, id int) error {
 func (app *Service) GetUserById(ctx context.Context, id int) (user domain.User, err error) {
 
 	return app.re.GetUserById(ctx, id)
+}
+
+func (app *Service) Hash(data string) (hash string, err error) {
+	hashed, err := bcrypt.GenerateFromPassword([]byte(data), bcrypt.DefaultCost)
+	if err != nil {
+		err = fmt.Errorf("ошибка хеширования %v", err)
+
+		return
+	}
+
+	return string(hashed), err
 }

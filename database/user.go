@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/Kovarniykrab/serverTesting/domain"
 )
@@ -36,12 +37,13 @@ func (rep *Repository) UpdateUser(ctx context.Context, user domain.User) error {
 	return err
 }
 
-func (rep *Repository) ChangePassword(ctx context.Context, id int, form domain.ChangePassForm) error {
+func (rep *Repository) ChangePassword(ctx context.Context, id int, hashedPassword string) error {
 
 	_, err := rep.db.NewUpdate().
 		Model(&domain.User{
-			ID:       id,
-			Password: form.Password,
+			ID:        id,
+			Password:  hashedPassword,
+			UpdatedAt: time.Now(),
 		}).
 		Column("password", "updated_at").
 		Where("id = ?", id).

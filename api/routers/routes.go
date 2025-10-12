@@ -45,7 +45,7 @@ func (app *App) GetRouter() *router.Router {
 	user.GET("/profile/{id}", app.GetUserHandler)
 	user.POST("/register", app.RegisterUserHandler)
 	user.PUT("/change_password/{id}", app.UpdatePasswordHandler)
-	user.PUT("/change_user", app.ChangeUserHandler)
+	user.PUT("/change_user/{id}", app.ChangeUserHandler)
 	user.DELETE("/delete/{id}", app.DeleteUserHandler)
 	user.POST("/logout", app.LogoutUserHandler)
 	user.POST("/login", app.AuthUserHandler)

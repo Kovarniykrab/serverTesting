@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/user/change_password": {
+        "/api/user//change_password/{id}": {
             "put": {
                 "description": "хендлер проверяет авторизован ли пользователь и запрашивает подтверждение пароля\nесли все в порядке, пользователю подается форма, для изменения данных.\nзатем пользователь подает форму на сервер, и они записываются вместо старых",
                 "consumes": [
@@ -64,7 +64,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/user/change_user": {
+        "/api/user/change_user/{id}": {
             "put": {
                 "description": "хендлер принимает форму, в которой содержатся новые данные и данные оставшиеся без изменений.\nон записывает все данные вместо старых",
                 "consumes": [
@@ -341,6 +341,12 @@ const docTemplate = `{
     "definitions": {
         "domain.ChangePassForm": {
             "type": "object",
+            "required": [
+                "confirm_pass",
+                "old_password",
+                "password",
+                "updated_at"
+            ],
             "properties": {
                 "confirm_pass": {
                     "description": "подтверждение пароля\nПоле обязательно",
@@ -353,11 +359,19 @@ const docTemplate = `{
                 "password": {
                     "description": "новый пароль\nПоле обязательно",
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
         "domain.ChangeUserForm": {
             "type": "object",
+            "required": [
+                "date_of_birth",
+                "name",
+                "updated_at"
+            ],
             "properties": {
                 "date_of_birth": {
                     "description": "дата рождения\nПоле обязательно",
@@ -366,11 +380,21 @@ const docTemplate = `{
                 "name": {
                     "description": "имя пользователя\nПоле обязательно",
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
         "domain.RegisterUserForm": {
             "type": "object",
+            "required": [
+                "confirm_password",
+                "date_of_birth",
+                "email",
+                "name",
+                "password"
+            ],
             "properties": {
                 "confirm_password": {
                     "description": "подтверждение пароля\nПоле обязательно",
@@ -396,6 +420,10 @@ const docTemplate = `{
         },
         "domain.UserAuthForm": {
             "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
             "properties": {
                 "email": {
                     "description": "логин\nПоле обязательно",
