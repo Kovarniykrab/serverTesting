@@ -76,7 +76,7 @@ func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.Chan
 		return fmt.Errorf("пользователь не найден")
 	}
 
-	if form.OldPassword != user.Password {
+	if err = Compare(user.Password, form.Password); err != nil {
 		return fmt.Errorf("пароли не совпадают")
 	}
 
@@ -111,4 +111,13 @@ func (app *Service) Hash(data string) (hash string, err error) {
 	}
 
 	return string(hashed), err
+}
+
+func Compare(data string, aim string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(data), []byte(aim))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

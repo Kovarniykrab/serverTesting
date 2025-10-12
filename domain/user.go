@@ -56,7 +56,7 @@ type ChangeUserForm struct {
 	//дата рождения
 	// Поле обязательно
 	DateOfBirth string `bun:"date_of_birth" json:"date_of_birth" binding:"required"`
-
+	//анонимное поле
 	UpdatedAt string `bun:"updated_at" json:"updated_at" binding:"required"`
 }
 
@@ -71,7 +71,8 @@ type ChangePassForm struct {
 	//подтверждение пароля
 	// Поле обязательно
 	ConfirmPass string `json:"confirm_pass" binding:"required"`
-	UpdatedAt   string `bun:"updated_at" json:"updated_at" binding:"required"`
+	//анонимное поле
+	UpdatedAt string `bun:"updated_at" json:"updated_at" binding:"required"`
 }
 
 type Users []User
