@@ -38,12 +38,28 @@ func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserFo
 	return app.re.RegisterUser(ctx, user)
 }
 
-func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (user domain.User, err error) {
+func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (domain.UserRender, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
+	if form.Email == "" || form.Password == "" {
+		return domain.UserRender{}, fmt.Errorf("логин и пароль обязательны")
+	}
 
-	return app.re.GetUserByEmail(ctx, form.Email)
+	user, err := app.re.GetUserByEmail(ctx, form.Email)
+	if err != nil {
+		return domain.UserRender{}, fmt.Errorf("пользователь не найден")
+	}
+
+	token, err := app.jwtService.GenerateJWT(user.ID)
+	if err != nil {
+		return domain.UserRender{}, fmt.Errorf("ошибка генерации токена")
+	}
+
+	return domain.UserRender{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+		Token: token,
+	}, nil
 }
 
 func (app *Service) DeleteUser(ctx context.Context, id int) error {

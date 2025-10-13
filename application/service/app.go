@@ -8,9 +8,10 @@ import (
 )
 
 type Service struct {
-	cfg    *configs.Config
-	logger *slog.Logger
-	re     *database.Repository
+	cfg        *configs.Config
+	logger     *slog.Logger
+	re         *database.Repository
+	jwtService *JWTService
 }
 
 func New(cfg *configs.Config, logger *slog.Logger, re *database.Repository) *Service {

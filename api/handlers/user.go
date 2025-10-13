@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"github.com/Kovarniykrab/serverTesting/domain"
 	"github.com/valyala/fasthttp"
@@ -69,7 +70,7 @@ func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	app.sendSuccessResponse(ctx, fasthttp.StatusNoContent, "Пользователь успешно удален")
+	app.sendSuccessResponse(ctx, fasthttp.StatusOK, "Пользователь успешно удален")
 }
 
 // UpdatePassword godoc
@@ -130,12 +131,23 @@ func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
 	var user domain.UserAuthForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
-
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.WriteString("Неверный формат данных")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный формат данных")
 		return
 	}
+
+	userRender, err := app.Service.AuthUser(ctx, user)
+	if err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, err.Error())
+		return
+	}
+
+	cookie := &fasthttp.Cookie{}
+	cookie.SetKey("session_token")
+	cookie.SetValue(userRender.Token)
+	cookie.SetExpire(time.Now().Add(24 * time.Hour))
+	cookie.SetHTTPOnly(true)
+	cookie.SetPath("/")
+	ctx.Response.Header.SetCookie(cookie)
 
 	//проверка существования польхователя в бд по логену или email
 
@@ -143,8 +155,7 @@ func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
 
 	//генерация токена
 
-	ctx.SetContentType("application/json")
-	ctx.SetStatusCode(fasthttp.StatusOK)
+	app.sendSuccessResponse(ctx, fasthttp.StatusOK, "Успешная авторизация")
 
 	//выдать сгенерированный jwt токен
 	//сообщение "Успешный вход"
@@ -217,7 +228,7 @@ func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	app.sendSuccessResponse(ctx, fasthttp.StatusNoContent, "Данные успешно обновлены")
+	app.sendSuccessResponse(ctx, fasthttp.StatusOK, "Данные успешно обновлены")
 }
 
 // LogoutUser godoc
@@ -242,13 +253,26 @@ func (app *App) LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 	ctx.WriteString("Успешный выход")
 }
 
-// Swagger godoc
-// @Summary     документация
-// @Description документация сервера доступная только разработчикам
-// @Tags         SWAGGER
-// @Accept       json
-// @Produce      json
-// @Success      204  ""
-// @Failure      400  {object}  ErrorResponse "Неверный запрос"
-// @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user/swagger [POST]
+func (app *App) AuthMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHandler {
+	return func(ctx *fasthttp.RequestCtx) {
+		// Получаем токен из куки
+		token := string(ctx.Request.Header.Cookie("session_token"))
+		if token == "" {
+			app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, "Требуется авторизация")
+			return
+		}
+
+		// Валидируем токен
+		userID, err := app.ValidateJWT(token)
+		if err != nil {
+			app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, "Неверный токен")
+			return
+		}
+
+		// Сохраняем userID в контексте для использования в хендлерах
+		ctx.SetUserValue("userID", userID)
+
+		// Вызываем следующий хендлер
+		next(ctx)
+	}
+}

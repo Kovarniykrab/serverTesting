@@ -48,6 +48,13 @@ type UserAuthForm struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type UserRender struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Token string `json:"token,omitempty"`
+}
+
 // форма смены данных пользователя
 type ChangeUserForm struct {
 	//имя пользователя
