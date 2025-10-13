@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/Kovarniykrab/serverTesting/domain"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -49,7 +50,7 @@ func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (dom
 		return domain.UserRender{}, fmt.Errorf("пользователь не найден")
 	}
 
-	token, err := app.jwtService.GenerateJWT(user.ID)
+	token, err := app.jwtService.CreateJWTToken(configs.JWT{}, user.ID)
 	if err != nil {
 		return domain.UserRender{}, fmt.Errorf("ошибка генерации токена")
 	}
@@ -58,7 +59,7 @@ func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (dom
 		ID:    user.ID,
 		Name:  user.Name,
 		Email: user.Email,
-		Token: token,
+		Token: *token,
 	}, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -15,37 +16,54 @@ func NewJWT(secretKey string) *JWTService {
 	return &JWTService{secretKey: secretKey}
 }
 
-func (j *JWTService) GenerateJWT(userID int) (string, error) {
-
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
-		"iat":     time.Now().Unix(),
+func (j *JWTService) CreateJWTToken(cnf configs.JWT, userID int) (*string, error) {
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(cnf.HourExpired))),
+		Issuer:    cnf.Issuer,
+		Subject:   fmt.Sprintf("%d", userID),
+		IssuedAt:  jwt.NewNumericDate(time.Now()), // Добавим время создания
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte(j.secretKey))
+	tokenString, err := token.SignedString([]byte(cnf.SecretKey))
+	if err != nil {
+		return nil, err
+	}
+
+	return &tokenString, nil
 }
 
-func (j *JWTService) ValidateJWT(tokenString string) (int, error) {
+func (j *JWTService) ValidateJwt(tokenString string) (sk *jwt.StandardClaims, e error) {
+	if tokenString == "" {
+		return nil, e
+	}
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	claims := &jwt.RegisteredClaims{}
 
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("неожиданный метод подписи: %v", token.Header["alg"])
-		}
-		return []byte(j.secretKey), nil
-	})
-
+	token, err := jwt.ParseWithClaims(tokenString, claims,
+		func(token *jwt.Token) (interface{}, error) {
+			return []byte(j.secretKey), nil
+		})
 	if err != nil {
-		return 0, fmt.Errorf("ошибка парсинга токена: %v", err)
+		return nil, err
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := int(claims["user_id"].(float64))
-		return userID, nil
+	if token.Valid {
+		return sk, nil
 	}
 
-	return 0, fmt.Errorf("невалидный токен")
+	// nolint:errorlint
+	if ve, ok := err.(*jwt.ValidationError); ok {
+		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+			return nil, err
+		}
+
+		if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+			return nil, err
+		}
+
+		return nil, err
+	}
+
+	return nil, err
 }
