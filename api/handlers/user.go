@@ -266,15 +266,15 @@ func (app *App) LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 func (app *App) CheckHandler(ctx *fasthttp.RequestCtx) {
 	userID := ctx.UserValue("userID").(int)
 
-	user, err := app.Service.GetUserById(ctx, userID)
+	userRender, err := app.Service.CheckUser(ctx, userID)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, "Пользователь не найден")
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, err.Error())
 		return
 	}
 
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	if jsonData, err := json.Marshal(user); err == nil {
+	if jsonData, err := json.Marshal(userRender); err == nil {
 		ctx.Write(jsonData)
 	}
 }
