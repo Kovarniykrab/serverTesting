@@ -11,7 +11,7 @@ type Service struct {
 	cfg        *configs.Config
 	logger     *slog.Logger
 	re         *database.Repository
-	jwtService *JWTService
+	JWTService *JWTService
 }
 
 func New(cfg *configs.Config, logger *slog.Logger, re *database.Repository) *Service {

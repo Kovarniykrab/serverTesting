@@ -244,35 +244,37 @@ func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 // @Router     /api/user/logout [POST]
 func (app *App) LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 
-	// проверка сущестования токена. Если токен просрочен - выход
+	cookie := &fasthttp.Cookie{}
+	cookie.SetKey("session_token")
+	cookie.SetValue("")
+	cookie.SetExpire(time.Now().Add(-1 * time.Hour))
+	cookie.SetHTTPOnly(true)
+	cookie.SetPath("/")
 
-	//удаление токена
-
-	ctx.SetContentType("application/json")
-	ctx.SetStatusCode(fasthttp.StatusNoContent)
-	ctx.WriteString("Успешный выход")
+	ctx.Response.Header.SetCookie(cookie)
+	app.sendSuccessResponse(ctx, fasthttp.StatusOK, "Успешный выход")
 }
 
-func (app *App) AuthMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		// Получаем токен из куки
-		token := string(ctx.Request.Header.Cookie("session_token"))
-		if token == "" {
-			app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, "Требуется авторизация")
-			return
-		}
+// Check godoc
+// @Summary Проверка авторизации
+// @Description Проверяет валидность токена и возвращает данные пользователя
+// @Tags AUTH
+// @Produce json
+// @Success 200 {object} UserResponse
+// @Failure 401 {object} ErrorResponse
+// @Router /api/user/check [GET]
+func (app *App) CheckHandler(ctx *fasthttp.RequestCtx) {
+	userID := ctx.UserValue("userID").(int)
 
-		// Валидируем токен
-		userID, err := app.ValidateJWT(token)
-		if err != nil {
-			app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, "Неверный токен")
-			return
-		}
+	user, err := app.Service.GetUserById(ctx, userID)
+	if err != nil {
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, "Пользователь не найден")
+		return
+	}
 
-		// Сохраняем userID в контексте для использования в хендлерах
-		ctx.SetUserValue("userID", userID)
-
-		// Вызываем следующий хендлер
-		next(ctx)
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	if jsonData, err := json.Marshal(user); err == nil {
+		ctx.Write(jsonData)
 	}
 }

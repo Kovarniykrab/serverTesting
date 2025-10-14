@@ -16,7 +16,7 @@ func NewJWT(secretKey string) *JWTService {
 	return &JWTService{secretKey: secretKey}
 }
 
-func (j *JWTService) CreateJWTToken(cnf configs.JWT, userID int) (*string, error) {
+func (j *JWTService) CreateJWTToken(cnf configs.JWT, userID int) (string, error) {
 	claims := jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(cnf.HourExpired))),
 		Issuer:    cnf.Issuer,
@@ -27,13 +27,13 @@ func (j *JWTService) CreateJWTToken(cnf configs.JWT, userID int) (*string, error
 
 	tokenString, err := token.SignedString([]byte(cnf.SecretKey))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &tokenString, nil
+	return tokenString, nil
 }
 
-func (j *JWTService) ValidateJwt(tokenString string) (sk *jwt.StandardClaims, e error) {
+func (j *JWTService) ValidateJwt(tokenString string) (sk *jwt.RegisteredClaims, e error) {
 	if tokenString == "" {
 		return nil, e
 	}

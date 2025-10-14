@@ -50,7 +50,7 @@ func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (dom
 		return domain.UserRender{}, fmt.Errorf("пользователь не найден")
 	}
 
-	token, err := app.jwtService.CreateJWTToken(configs.JWT{}, user.ID)
+	token, err := app.JWTService.CreateJWTToken(configs.JWT{}, user.ID)
 	if err != nil {
 		return domain.UserRender{}, fmt.Errorf("ошибка генерации токена")
 	}
@@ -59,7 +59,7 @@ func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (dom
 		ID:    user.ID,
 		Name:  user.Name,
 		Email: user.Email,
-		Token: *token,
+		Token: token,
 	}, nil
 }
 
@@ -117,6 +117,19 @@ func (app *Service) LogoutUser(ctx context.Context, id int) error {
 func (app *Service) GetUserById(ctx context.Context, id int) (user domain.User, err error) {
 
 	return app.re.GetUserById(ctx, id)
+}
+
+func (s *Service) CheckUser(ctx context.Context, userID int) (domain.UserRender, error) {
+	user, err := s.re.GetUserById(ctx, userID)
+	if err != nil {
+		return domain.UserRender{}, fmt.Errorf("пользователь не найден")
+	}
+
+	return domain.UserRender{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+	}, nil
 }
 
 func (app *Service) Hash(data string) (hash string, err error) {
