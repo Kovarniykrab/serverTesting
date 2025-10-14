@@ -260,8 +260,8 @@ func (app *App) LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 // @Description Проверяет валидность токена и возвращает данные пользователя
 // @Tags AUTH
 // @Produce json
-// @Success 200 {object} UserResponse
-// @Failure 401 {object} ErrorResponse
+// @Success 204
+// @Failure 401 {object} ErrorResponse "ошибка"
 // @Router /api/user/check [GET]
 func (app *App) CheckHandler(ctx *fasthttp.RequestCtx) {
 	userID := ctx.UserValue("userID").(int)

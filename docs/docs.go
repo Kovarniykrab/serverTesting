@@ -107,6 +107,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/user/check": {
+            "get": {
+                "description": "Проверяет валидность токена и возвращает данные пользователя",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AUTH"
+                ],
+                "summary": "Проверка авторизации",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/delete/{id}": {
             "delete": {
                 "description": "Пользователя удаляют из системы по ID. Хендлер принимает ID,\nи с его помощью находит пользователя в базе данных и удаляет его из нее",
@@ -344,8 +367,7 @@ const docTemplate = `{
             "required": [
                 "confirm_pass",
                 "old_password",
-                "password",
-                "updated_at"
+                "password"
             ],
             "properties": {
                 "confirm_pass": {
@@ -359,9 +381,6 @@ const docTemplate = `{
                 "password": {
                     "description": "новый пароль\nПоле обязательно",
                     "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
                 }
             }
         },
@@ -369,8 +388,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "date_of_birth",
-                "name",
-                "updated_at"
+                "name"
             ],
             "properties": {
                 "date_of_birth": {
@@ -379,9 +397,6 @@ const docTemplate = `{
                 },
                 "name": {
                     "description": "имя пользователя\nПоле обязательно",
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }

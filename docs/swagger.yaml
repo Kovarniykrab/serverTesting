@@ -17,13 +17,10 @@ definitions:
           новый пароль
           Поле обязательно
         type: string
-      updated_at:
-        type: string
     required:
     - confirm_pass
     - old_password
     - password
-    - updated_at
     type: object
   domain.ChangeUserForm:
     properties:
@@ -37,12 +34,9 @@ definitions:
           имя пользователя
           Поле обязательно
         type: string
-      updated_at:
-        type: string
     required:
     - date_of_birth
     - name
-    - updated_at
     type: object
   domain.RegisterUserForm:
     properties:
@@ -180,6 +174,21 @@ paths:
       summary: изменение данных пользователя
       tags:
       - USER
+  /api/user/check:
+    get:
+      description: Проверяет валидность токена и возвращает данные пользователя
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: ошибка
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Проверка авторизации
+      tags:
+      - AUTH
   /api/user/delete/{id}:
     delete:
       consumes:
