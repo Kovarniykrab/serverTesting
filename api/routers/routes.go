@@ -42,14 +42,8 @@ func (app *App) GetRouter() *router.Router {
 	swaggerRouter.GET("/swagger/{any:*}", swagger.WrapHandler())
 
 	user := api.Group("/user")
-	user.GET("/profile/{id}", app.GetUserHandler)
-	user.POST("/register", app.RegisterUserHandler)
-	user.PUT("/change_password/{id}", app.AuthMiddleware(app.UpdatePasswordHandler))
-	user.PUT("/change_user/{id}", app.ChangeUserHandler)
-	user.DELETE("/api/user/delete/{id}", app.AuthMiddleware(app.DeleteUserHandler))
-	user.POST("/logout", app.AuthMiddleware(app.LogoutUserHandler))
-	user.POST("/login", app.AuthUserHandler)
-	user.GET("/api/user/check", app.AuthMiddleware(app.CheckHandler))
+	app.userRoutes(user)
+	app.authRoutes(user)
 
 	return routers
 

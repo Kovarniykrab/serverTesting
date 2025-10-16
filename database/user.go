@@ -9,11 +9,7 @@ import (
 
 func (rep *Repository) RegisterUser(ctx context.Context, form domain.User) error {
 
-	_, err := rep.db.NewInsert().Model(&form).Exec(ctx)
-	if err != nil {
-		rep.log.Error("Failed to register user", "error", err)
-		return err
-	}
+	_, err := rep.db.NewInsert().Model(&form).On("CONFLICT (id) DO UPDATE").Exec(ctx)
 	return err
 }
 
@@ -29,11 +25,7 @@ func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
 
 func (rep *Repository) UpdateUser(ctx context.Context, user domain.User) error {
 
-	_, err := rep.db.NewUpdate().Model(&user).WherePK().Exec(ctx)
-	if err != nil {
-		rep.log.Error("Failed to update user", "error", err)
-		return err
-	}
+	_, err := rep.db.NewInsert().Model(&user).On("CONFLICT (id) DO UPDATE").Exec(ctx)
 	return err
 }
 

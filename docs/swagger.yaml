@@ -109,7 +109,7 @@ info:
   title: TestUser API
   version: "0.5"
 paths:
-  /api/user//change_password/{id}:
+  /api/user/change_password/{id}:
     put:
       consumes:
       - application/json

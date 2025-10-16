@@ -86,7 +86,7 @@ func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      401 {object} ErrorResponse "Не авторизован"
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
-// @Router     /api/user//change_password/{id} [PUT]
+// @Router     /api/user/change_password/{id} [PUT]
 func (app *App) UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 
 	idStr := ctx.UserValue("id").(string)
