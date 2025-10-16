@@ -19,13 +19,14 @@ type App struct {
 }
 
 func New(ctx context.Context, cfg *configs.Config, log *slog.Logger) *App {
-	db, err := database.New(cfg.PSQL, log)
+
+	db, err := database.New(ctx, cfg.PSQL, log)
 	if err != nil {
 		panic(err)
 	}
 
-	srv := service.New(ctx, cfg, log, db)
-	hand := handlers.New(ctx, cfg, srv, log)
+	srv := service.New(cfg, log, db)
+	hand := handlers.New(cfg, srv, log)
 
 	return &App{
 		App:    *hand,
@@ -41,13 +42,8 @@ func (app *App) GetRouter() *router.Router {
 	swaggerRouter.GET("/swagger/{any:*}", swagger.WrapHandler())
 
 	user := api.Group("/user")
-	user.GET("/profile/{id}", app.GetUserHandler)
-	user.POST("/register", app.RegisterUserHandler)
-	user.PUT("/changePassword{id}", app.UpdatePasswordHandler)
-	user.PUT("/changeUser", app.ChangeUserHandler)
-	user.DELETE("/delete/{id}", app.DeleteUserHandler)
-	user.POST("/logout", app.LogoutUserHandler)
-	user.POST("/login", app.AuthUserHandler)
+	app.userRoutes(user)
+	app.authRoutes(user)
 
 	return routers
 

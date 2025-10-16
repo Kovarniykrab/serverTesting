@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/user/change_password": {
+        "/api/user/change_password/{id}": {
             "put": {
                 "description": "хендлер проверяет авторизован ли пользователь и запрашивает подтверждение пароля\nесли все в порядке, пользователю подается форма, для изменения данных.\nзатем пользователь подает форму на сервер, и они записываются вместо старых",
                 "consumes": [
@@ -64,7 +64,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/user/change_user": {
+        "/api/user/change_user/{id}": {
             "put": {
                 "description": "хендлер принимает форму, в которой содержатся новые данные и данные оставшиеся без изменений.\nон записывает все данные вместо старых",
                 "consumes": [
@@ -100,6 +100,29 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/check": {
+            "get": {
+                "description": "Проверяет валидность токена и возвращает данные пользователя",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AUTH"
+                ],
+                "summary": "Проверка авторизации",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "ошибка",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -341,6 +364,11 @@ const docTemplate = `{
     "definitions": {
         "domain.ChangePassForm": {
             "type": "object",
+            "required": [
+                "confirm_pass",
+                "old_password",
+                "password"
+            ],
             "properties": {
                 "confirm_pass": {
                     "description": "подтверждение пароля\nПоле обязательно",
@@ -358,6 +386,10 @@ const docTemplate = `{
         },
         "domain.ChangeUserForm": {
             "type": "object",
+            "required": [
+                "date_of_birth",
+                "name"
+            ],
             "properties": {
                 "date_of_birth": {
                     "description": "дата рождения\nПоле обязательно",
@@ -371,6 +403,13 @@ const docTemplate = `{
         },
         "domain.RegisterUserForm": {
             "type": "object",
+            "required": [
+                "confirm_password",
+                "date_of_birth",
+                "email",
+                "name",
+                "password"
+            ],
             "properties": {
                 "confirm_password": {
                     "description": "подтверждение пароля\nПоле обязательно",
@@ -396,6 +435,10 @@ const docTemplate = `{
         },
         "domain.UserAuthForm": {
             "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
             "properties": {
                 "email": {
                     "description": "логин\nПоле обязательно",

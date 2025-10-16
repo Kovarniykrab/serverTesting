@@ -9,7 +9,10 @@ type Config struct {
 }
 
 type JWT struct {
-	SecretKey string `long:"jwt-secret-key" env:"SERVERTESTING_JWT_SECRET_KEY"`
+	Issuer      string `long:"jwt-issuer" env:"SERVERTESTING_JWT_ISSUER"`
+	SecretKey   string `long:"jwt-secret-key" env:"SERVERTESTING_JWT_SECRET_KEY"`
+	KeyLength   int    `long:"jwt-key-length" env:"SERVERTESTING_JWT_KEY_LENGTH"`
+	HourExpired int    `long:"jwt-hour-expired" env:"SERVERTESTING_JWT_HOUR_EXPIRED"`
 }
 type Web struct {
 	Host         string     `long:"web-host" env:"SERVERTESTING_WEB_HOST"`
