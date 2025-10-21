@@ -69,6 +69,8 @@ func (app *Service) DeleteUser(ctx context.Context, id int) error {
 	if err != nil {
 		return fmt.Errorf("пользователь не найден")
 	}
+
+	// проверка на емейл
 	return app.re.DeleteUser(ctx, id)
 }
 
@@ -92,7 +94,7 @@ func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.Chan
 	if err != nil {
 		return fmt.Errorf("пользователь не найден")
 	}
-
+	// проверка на емайл
 	if err = Compare(user.Password, form.OldPassword); err != nil {
 		return fmt.Errorf("старый пароль не верен")
 	}
