@@ -2,11 +2,16 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/Kovarniykrab/serverTesting/domain"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	errorForbidden = errors.New("Forbidden")
 )
 
 func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserForm) error {
@@ -45,11 +50,11 @@ func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (dom
 
 	user, err := app.re.GetUserByEmail(ctx, form.Email)
 	if err != nil {
-		return domain.UserRender{}, domain.Unauthorized(err)
+		return domain.UserRender{}, domain.NoContent(err)
 	}
 
 	if err := Compare(user.Password, form.Password); err != nil {
-		return domain.UserRender{}, domain.Unauthorized(err)
+		return domain.UserRender{}, domain.Unauthorized(errorForbidden)
 	}
 
 	token, err := app.JWTService.CreateJWTToken(configs.JWT{}, user.ID)

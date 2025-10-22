@@ -21,10 +21,10 @@ type AuthResponse struct {
 	JWTToken string `json:"JWT"`
 }
 
-func (app *App) sendErrorResponse(ctx *fasthttp.RequestCtx, statusCode int, message string) {
+func (app *App) sendErrorResponse(ctx *fasthttp.RequestCtx, statusCode int, err error) {
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(statusCode)
-	response := ErrorResponse{Error: message}
+	response := ErrorResponse{Error: }
 	if jsonData, err := json.Marshal(response); err == nil {
 		ctx.Write(jsonData)
 	}

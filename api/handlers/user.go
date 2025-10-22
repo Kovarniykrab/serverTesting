@@ -61,7 +61,7 @@ func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue("id").(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.NotFound(err))
 		return
 	}
 
