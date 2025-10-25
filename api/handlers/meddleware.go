@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+
 	"github.com/valyala/fasthttp"
 )
 
@@ -9,13 +11,13 @@ func (app *App) AuthMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHan
 
 		token := string(ctx.Request.Header.Cookie("session_token"))
 		if token == "" {
-			app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, "Требуется авторизация")
+			app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, errors.New("session token is required"))
 			return
 		}
 
 		userID, err := app.Service.JWTService.ValidateJwt(token)
 		if err != nil {
-			app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, "Неверный токен")
+			app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, err)
 			return
 		}
 

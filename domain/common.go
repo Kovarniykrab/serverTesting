@@ -35,6 +35,7 @@ func BadRequest(err error) error {
 }
 
 func Unauthorized(err error) error {
+	
 	if err == nil {
 		err = ErrUnauthorized
 	}

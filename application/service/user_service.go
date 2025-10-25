@@ -11,18 +11,24 @@ import (
 )
 
 var (
-	errorForbidden = errors.New("Forbidden")
+	errorForbidden   = errors.New("Forbidden")
+	errorConflict    = errors.New("Conflict")
+	errorBadReq      = errors.New("Bad Request")
+	errorUnautorized = errors.New("Unautorized")
+	errorNoContent   = errors.New("No content")
+	errorNoFound     = errors.New("No found")
+	errorInternal    = errors.New("Internal")
 )
 
 func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserForm) error {
 
 	busyEmail, err := app.re.GetUserByEmail(ctx, form.Email)
 	if err == nil && busyEmail.ID != 0 {
-		return domain.Conflict(err)
+		return domain.Conflict(errorConflict)
 	}
 
 	if form.Password != form.ConfirmPassword {
-		return domain.BadRequest(err)
+		return domain.BadRequest(errorBadReq)
 	}
 
 	hashPassword, e := app.Hash(form.Password)
@@ -44,13 +50,12 @@ func (app *Service) RegisterUser(ctx context.Context, form domain.RegisterUserFo
 func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (domain.UserRender, error) {
 
 	if form.Email == "" || form.Password == "" {
-		var err error
-		return domain.UserRender{}, domain.Unauthorized(err)
+		return domain.UserRender{}, domain.Unauthorized(errorUnautorized)
 	}
 
 	user, err := app.re.GetUserByEmail(ctx, form.Email)
 	if err != nil {
-		return domain.UserRender{}, domain.NoContent(err)
+		return domain.UserRender{}, domain.NoContent(errorNoContent)
 	}
 
 	if err := Compare(user.Password, form.Password); err != nil {
@@ -59,7 +64,7 @@ func (app *Service) AuthUser(ctx context.Context, form domain.UserAuthForm) (dom
 
 	token, err := app.JWTService.CreateJWTToken(configs.JWT{}, user.ID)
 	if err != nil {
-		return domain.UserRender{}, domain.Unauthorized(err)
+		return domain.UserRender{}, domain.Unauthorized(errorUnautorized)
 	}
 
 	return domain.UserRender{
@@ -74,7 +79,7 @@ func (app *Service) DeleteUser(ctx context.Context, id int) error {
 
 	_, err := app.re.GetUserById(ctx, id)
 	if err != nil {
-		return domain.NotFound(err)
+		return domain.NotFound(errorNoFound)
 	}
 
 	// проверка на емейл
@@ -85,7 +90,7 @@ func (app *Service) UpdateUser(ctx context.Context, id int, form domain.ChangeUs
 
 	user, err := app.re.GetUserById(ctx, id)
 	if err != nil {
-		return domain.Conflict(err)
+		return domain.Conflict(errorConflict)
 	}
 
 	user.Name = form.Name
@@ -99,20 +104,20 @@ func (app *Service) UpdatePassword(ctx context.Context, id int, form domain.Chan
 
 	user, err := app.re.GetUserById(ctx, id)
 	if err != nil {
-		return domain.NotFound(err)
+		return domain.NotFound(errorNoFound)
 	}
 	// проверка на емайл
 	if err = Compare(user.Password, form.OldPassword); err != nil {
-		return domain.Conflict(err)
+		return domain.Conflict(errorConflict)
 	}
 
 	if form.Password != form.ConfirmPass {
-		return domain.Conflict(err)
+		return domain.Conflict(errorConflict)
 	}
 
 	hashPassword, err := app.Hash(form.Password)
 	if err != nil {
-		return domain.Conflict(err)
+		return domain.Conflict(errorConflict)
 	}
 
 	return app.re.ChangePassword(ctx, id, hashPassword)
@@ -131,7 +136,7 @@ func (app *Service) GetUserById(ctx context.Context, id int) (user domain.User, 
 func (s *Service) CheckUser(ctx context.Context, userID int) (domain.UserRender, error) {
 	user, err := s.re.GetUserById(ctx, userID)
 	if err != nil {
-		return domain.UserRender{}, domain.NotFound(err)
+		return domain.UserRender{}, domain.NotFound(errorNoFound)
 	}
 
 	return domain.UserRender{
@@ -145,7 +150,7 @@ func (app *Service) Hash(data string) (hash string, err error) {
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(data), bcrypt.DefaultCost)
 	if err != nil {
-		return "", domain.Internal(err)
+		return "", domain.Internal(errorInternal)
 
 	}
 
@@ -155,7 +160,7 @@ func (app *Service) Hash(data string) (hash string, err error) {
 func Compare(data string, aim string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(data), []byte(aim))
 	if err != nil {
-		return domain.Forbidden(err)
+		return domain.Forbidden(errorForbidden)
 	}
 
 	return nil

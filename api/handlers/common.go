@@ -13,7 +13,7 @@ type SuccessResponse struct {
 
 // ErrorResponse - ошибка
 type ErrorResponse struct {
-	Error string `json:"error"`
+	Error error `json:"error"`
 }
 
 // AuthResponse - токен
@@ -24,7 +24,7 @@ type AuthResponse struct {
 func (app *App) sendErrorResponse(ctx *fasthttp.RequestCtx, statusCode int, err error) {
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(statusCode)
-	response := ErrorResponse{Error: }
+	response := ErrorResponse{Error: err}
 	if jsonData, err := json.Marshal(response); err == nil {
 		ctx.Write(jsonData)
 	}
