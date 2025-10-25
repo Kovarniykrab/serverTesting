@@ -29,12 +29,12 @@ func (app *App) RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 	var form domain.RegisterUserForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный формат данных")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
 		return
 	}
 
 	if err := app.Service.RegisterUser(ctx, form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err.Error())
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
 
@@ -61,12 +61,12 @@ func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue("id").(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.NotFound(err))
 		return
 	}
 
 	if err := app.Service.DeleteUser(ctx, id); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, err.Error())
+		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, err)
 		return
 	}
 
@@ -92,18 +92,18 @@ func (app *App) UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue("id").(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
 		return
 	}
 
 	var form domain.ChangePassForm
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный формат данных")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
 		return
 	}
 
 	if err := app.Service.UpdatePassword(ctx, id, form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err.Error())
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
 
@@ -131,13 +131,13 @@ func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
 	var user domain.UserAuthForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный формат данных")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
 		return
 	}
 
 	userRender, err := app.Service.AuthUser(ctx, user)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, err.Error())
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.Unauthorized(err))
 		return
 	}
 
@@ -178,13 +178,13 @@ func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue("id").(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
 		return
 	}
 
 	user, err := app.Service.GetUserById(ctx, id)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, "Пользователь не найден")
+		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, domain.NotFound(err))
 		return
 	}
 
@@ -212,19 +212,19 @@ func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue("id").(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный ID пользователя")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
 		return
 	}
 
 	var form domain.ChangeUserForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, "Неверный формат данных")
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
 		return
 	}
 
 	if err := app.Service.UpdateUser(ctx, id, form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err.Error())
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
 
@@ -268,7 +268,7 @@ func (app *App) CheckHandler(ctx *fasthttp.RequestCtx) {
 
 	userRender, err := app.Service.CheckUser(ctx, userID)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, err.Error())
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.Unauthorized(err))
 		return
 	}
 
