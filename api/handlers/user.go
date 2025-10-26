@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"strconv"
 	"time"
 
@@ -190,8 +191,15 @@ func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
 
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	if jsonData, err := json.Marshal(user); err == nil {
-		ctx.Write(jsonData)
+	jsonData, err := json.Marshal(user)
+	if err != nil {
+		slog.Error("Failed to marshal user response", "error", err)
+		app.sendErrorResponse(ctx, fasthttp.StatusInternalServerError, domain.ErrInternalServerError)
+		return
+	}
+
+	if _, err := ctx.Write(jsonData); err != nil {
+		slog.Error("Failed to write user response", "error", err)
 	}
 }
 
@@ -274,7 +282,14 @@ func (app *App) CheckHandler(ctx *fasthttp.RequestCtx) {
 
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	if jsonData, err := json.Marshal(userRender); err == nil {
-		ctx.Write(jsonData)
+	jsonData, err := json.Marshal(userRender)
+	if err != nil {
+		slog.Error("Failed to marshal user response", "error", err)
+		app.sendErrorResponse(ctx, fasthttp.StatusInternalServerError, domain.ErrInternalServerError)
+		return
+	}
+
+	if _, err := ctx.Write(jsonData); err != nil {
+		slog.Error("Failed to write user response", "error", err)
 	}
 }

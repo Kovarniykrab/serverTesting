@@ -94,7 +94,7 @@ func main() {
 
 }
 
-var embedMigrations embed.FS
+var embedMigrations embed.FS //nolint:unused
 
 func migrate(cfg configs.PSQL) {
 	goose.SetBaseFS(embedServer.EmbedMigrations)
