@@ -1,9 +1,17 @@
 package domain
 
 import (
+	"strings"
 	"time"
 
 	"github.com/uptrace/bun"
+)
+
+const (
+	MinPasswordLenght = 6
+	MaxPasswordLenght = 40
+	MinNameLength     = 6
+	MaxNameLength     = 20
 )
 
 type User struct {
@@ -79,3 +87,91 @@ type ChangePassForm struct {
 }
 
 type Users []User
+
+func isValidEmail(email string) bool {
+	email = strings.TrimSpace(email)
+	if email == "" {
+		return false
+	}
+
+	// Простая проверка email
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return false
+	}
+
+	if parts[0] == "" || parts[1] == "" {
+		return false
+	}
+
+	// Проверяем что есть точка в доменной части
+	if !strings.Contains(parts[1], ".") {
+		return false
+	}
+
+	return true
+}
+
+func isValidName(name string) bool {
+	name = strings.TrimSpace(name)
+	if len(name) < MinNameLength || len(name) > MaxNameLength {
+		return false
+	}
+	return true
+}
+
+func isValidPassword(password string) bool {
+	if len(password) < MinPasswordLenght || len(password) > MaxPasswordLenght {
+		return false
+	}
+	return true
+}
+
+func (f *RegisterUserForm) Validate() error {
+	if !isValidEmail(f.Email) {
+		return ErrBadRequest
+	}
+	if !isValidName(f.Name) {
+		return ErrBadRequest
+	}
+	if !isValidPassword(f.Password) {
+		return ErrBadRequest
+	}
+	if f.Password != f.ConfirmPassword {
+		return ErrConflict
+	}
+	return nil
+}
+
+func (f *ChangeUserForm) Validate() error {
+	if !isValidName(f.Name) {
+		return ErrBadRequest
+	}
+	return nil
+}
+
+func (f *ChangePassForm) Validate() error {
+	if f.OldPassword == "" {
+		return ErrBadRequest
+	}
+	if !isValidPassword(f.Password) {
+		return ErrBadRequest
+	}
+	if f.Password != f.ConfirmPass {
+		return ErrConflict
+	}
+	if f.OldPassword == f.Password {
+		return ErrConflict
+	}
+	return nil
+}
+
+func (f *UserAuthForm) Validate() error {
+	if f.Email == "" || f.Password == "" {
+		return ErrBadRequest
+	}
+	if !isValidEmail(f.Email) {
+		return ErrBadRequest
+	}
+	return nil
+}
