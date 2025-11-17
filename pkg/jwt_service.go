@@ -1,6 +1,7 @@
-package service
+package pkg
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -21,11 +22,11 @@ func (j *JWTService) CreateJWTToken(cnf configs.JWT, userID int) (string, error)
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(cnf.HourExpired))),
 		Issuer:    cnf.Issuer,
 		Subject:   fmt.Sprintf("%d", userID),
-		IssuedAt:  jwt.NewNumericDate(time.Now()), // Добавим время создания
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString([]byte(cnf.SecretKey))
+	tokenString, err := token.SignedString([]byte(j.secretKey))
 	if err != nil {
 		return "", err
 	}
@@ -33,9 +34,9 @@ func (j *JWTService) CreateJWTToken(cnf configs.JWT, userID int) (string, error)
 	return tokenString, nil
 }
 
-func (j *JWTService) ValidateJwt(tokenString string) (sk *jwt.RegisteredClaims, e error) {
+func (j *JWTService) ValidateJwt(tokenString string) (*jwt.RegisteredClaims, error) {
 	if tokenString == "" {
-		return nil, e
+		return nil, errors.New("empty token")
 	}
 
 	claims := &jwt.RegisteredClaims{}
@@ -45,25 +46,25 @@ func (j *JWTService) ValidateJwt(tokenString string) (sk *jwt.RegisteredClaims, 
 			return []byte(j.secretKey), nil
 		})
 	if err != nil {
-		return nil, err
-	}
-
-	if token.Valid {
-		return sk, nil
-	}
-
-	// nolint:errorlint
-	if ve, ok := err.(*jwt.ValidationError); ok {
-		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-			return nil, err
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+				return nil, errors.New("malformed token")
+			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				return nil, errors.New("token expired")
+			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+				return nil, errors.New("token not valid yet")
+			}
 		}
-
-		if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
-			return nil, err
-		}
-
-		return nil, err
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
-	return nil, err
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
 }
+
+// архитектура папок
+// не app методы, а обертки
+//

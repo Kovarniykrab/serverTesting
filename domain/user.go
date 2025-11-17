@@ -17,13 +17,14 @@ const (
 type User struct {
 	bun.BaseModel `bun:"table:users,alias:u"`
 
-	ID          int       `bun:"id,pk,autoincrement" json:"id"`
-	Email       string    `bun:"email" json:"email"`
-	Name        string    `bun:"name" json:"name"`
-	DateOfBirth string    `bun:"date_of_birth" json:"date_of_birth"`
-	Password    string    `bun:"password" json:"password"`
-	CreatedAt   time.Time `bun:"created_at,default:current_timestamp" json:"created_at"`
-	UpdatedAt   time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
+	ID          int        `bun:"id,pk,autoincrement" json:"id"`
+	Email       string     `bun:"email" json:"email"`
+	Name        string     `bun:"name" json:"name"`
+	DateOfBirth string     `bun:"date_of_birth" json:"date_of_birth"`
+	Password    string     `bun:"password" json:"-"`
+	CreatedAt   time.Time  `bun:"created_at,default:current_timestamp" json:"created_at"`
+	UpdatedAt   *time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
+	DeletedAt   time.Time  `bun:"deleted_at,default:current_timestamp" json:"deleted_at"`
 }
 
 // форма регистрации
@@ -57,10 +58,13 @@ type UserAuthForm struct {
 }
 
 type UserRender struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Token string `json:"token,omitempty"`
+	ID          int        `json:"id"`
+	Name        string     `json:"name"`
+	Email       string     `json:"email"`
+	DateOfBirth string     `bun:"date_of_birth" json:"date_of_birth"`
+	CreatedAt   time.Time  `bun:"created_at,default:current_timestamp" json:"created_at"`
+	UpdatedAt   *time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
+	DeletedAt   *time.Time `bun:"deleted_at,default:current_timestamp" json:"deleted_at"`
 }
 
 // форма смены данных пользователя

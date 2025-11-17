@@ -51,7 +51,7 @@ func main() {
 	address := conf.Web.Host + ":" + strconv.Itoa(conf.Web.Port)
 
 	server := &fasthttp.Server{
-		Handler:     r.GetRouter().Handler,
+		Handler:     r.GetHandler(),
 		ReadTimeout: 10 * time.Second,
 	}
 
@@ -118,14 +118,4 @@ func initLogger(conf configs.Config) *slog.Logger {
 	return logger
 }
 
-// в сервисе проверки регистрации поднять в хендлеры +
-// разделить ошибки и не делать их вместе и не дублировать проверки ?
 //sql no found маяк посмотреть ---
-// в апдейт проверить пользователя по id, если есть, то только тогда апдейт +
-// getUserById перевести к единому стилю +
-// в регистрации датабейз убрать форму и перенести ее в сервис +
-// доставать сертификаты через енвы +-
-// проверка сертификатов только на нил и все +
-// поправить свагер и хендлеры +
-//доменные модели добавить required +
-//

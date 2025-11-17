@@ -9,7 +9,8 @@ import (
 
 // SuccessResponse - успешный ответ
 type SuccessResponse struct {
-	Message string `json:"message"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 // ErrorResponse - ошибка
@@ -45,10 +46,14 @@ func (app *App) sendErrorResponse(ctx *fasthttp.RequestCtx, statusCode int, err 
 	}
 }
 
-func (app *App) sendSuccessResponse(ctx *fasthttp.RequestCtx, statusCode int, message string) {
+func (app *App) sendSuccessResponse(ctx *fasthttp.RequestCtx, statusCode int, message string, data ...interface{}) {
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(statusCode)
 	response := SuccessResponse{Message: message}
+
+	if len(data) > 0 && data[0] != nil {
+		response.Data = data[0]
+	}
 	jsonData, err := json.Marshal(response)
 	if err != nil {
 		slog.Error("Failed to marshal success response", "error", err)

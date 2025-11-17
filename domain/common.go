@@ -16,6 +16,7 @@ var (
 	ErrBadRequest          = errors.New("bad request")
 	ErrInvalidFormat       = errors.New("invalid format")
 	ErrNoContent           = errors.New("no content")
+	ErrTimeout             = errors.New("Timeout")
 )
 
 type MessageError struct {
@@ -35,7 +36,7 @@ func BadRequest(err error) error {
 }
 
 func Unauthorized(err error) error {
-	
+
 	if err == nil {
 		err = ErrUnauthorized
 	}
@@ -76,4 +77,11 @@ func NoContent(err error) error {
 	}
 
 	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusNoContent}
+}
+
+func Timeout(err error) error {
+	if err == nil {
+		err = ErrTimeout
+	}
+	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusConflict}
 }
