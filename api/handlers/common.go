@@ -2,18 +2,20 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 
 	"github.com/valyala/fasthttp"
 )
 
 // SuccessResponse - успешный ответ
 type SuccessResponse struct {
-	Message string `json:"message"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 // ErrorResponse - ошибка
 type ErrorResponse struct {
-	Error error `json:"error"`
+	Error string `json:"error"`
 }
 
 // AuthResponse - токен
@@ -24,17 +26,45 @@ type AuthResponse struct {
 func (app *App) sendErrorResponse(ctx *fasthttp.RequestCtx, statusCode int, err error) {
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(statusCode)
-	response := ErrorResponse{Error: err}
-	if jsonData, err := json.Marshal(response); err == nil {
-		ctx.Write(jsonData)
+	errorMsg := ""
+	if err != nil {
+		errorMsg = err.Error()
+	}
+	response := ErrorResponse{Error: errorMsg}
+	jsonData, err := json.Marshal(response)
+	if err != nil {
+		slog.Error("Failed to marshal error response", "error", err)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		if _, writeErr := ctx.Write([]byte(`{"error": "internal server error"}`)); writeErr != nil {
+			slog.Error("Failed to write fallback error response", "error", writeErr)
+		}
+		return
+	}
+
+	if _, err := ctx.Write(jsonData); err != nil {
+		slog.Error("Failed to write error response", "error", err)
 	}
 }
 
-func (app *App) sendSuccessResponse(ctx *fasthttp.RequestCtx, statusCode int, message string) {
+func (app *App) sendSuccessResponse(ctx *fasthttp.RequestCtx, statusCode int, message string, data ...interface{}) {
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(statusCode)
 	response := SuccessResponse{Message: message}
-	if jsonData, err := json.Marshal(response); err == nil {
-		ctx.Write(jsonData)
+
+	if len(data) > 0 && data[0] != nil {
+		response.Data = data[0]
+	}
+	jsonData, err := json.Marshal(response)
+	if err != nil {
+		slog.Error("Failed to marshal success response", "error", err)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		if _, writeErr := ctx.Write([]byte(`{"error": "internal server error"}`)); writeErr != nil {
+			slog.Error("Failed to write fallback error response", "error", writeErr)
+		}
+		return
+	}
+
+	if _, err := ctx.Write(jsonData); err != nil {
+		slog.Error("Failed to write success response", "error", err)
 	}
 }

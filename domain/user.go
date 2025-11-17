@@ -1,21 +1,30 @@
 package domain
 
 import (
+	"strings"
 	"time"
 
 	"github.com/uptrace/bun"
 )
 
+const (
+	MinPasswordLenght = 6
+	MaxPasswordLenght = 40
+	MinNameLength     = 6
+	MaxNameLength     = 20
+)
+
 type User struct {
 	bun.BaseModel `bun:"table:users,alias:u"`
 
-	ID          int       `bun:"id,pk,autoincrement" json:"id"`
-	Email       string    `bun:"email" json:"email"`
-	Name        string    `bun:"name" json:"name"`
-	DateOfBirth string    `bun:"date_of_birth" json:"date_of_birth"`
-	Password    string    `bun:"password" json:"password"`
-	CreatedAt   time.Time `bun:"created_at,default:current_timestamp" json:"created_at"`
-	UpdatedAt   time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
+	ID          int        `bun:"id,pk,autoincrement" json:"id"`
+	Email       string     `bun:"email" json:"email"`
+	Name        string     `bun:"name" json:"name"`
+	DateOfBirth string     `bun:"date_of_birth" json:"date_of_birth"`
+	Password    string     `bun:"password" json:"-"`
+	CreatedAt   time.Time  `bun:"created_at,default:current_timestamp" json:"created_at"`
+	UpdatedAt   *time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
+	DeletedAt   time.Time  `bun:"deleted_at,default:current_timestamp" json:"deleted_at"`
 }
 
 // форма регистрации
@@ -49,10 +58,13 @@ type UserAuthForm struct {
 }
 
 type UserRender struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Token string `json:"token,omitempty"`
+	ID          int        `json:"id"`
+	Name        string     `json:"name"`
+	Email       string     `json:"email"`
+	DateOfBirth string     `bun:"date_of_birth" json:"date_of_birth"`
+	CreatedAt   time.Time  `bun:"created_at,default:current_timestamp" json:"created_at"`
+	UpdatedAt   *time.Time `bun:"updated_at,default:current_timestamp" json:"updated_at"`
+	DeletedAt   *time.Time `bun:"deleted_at,default:current_timestamp" json:"deleted_at"`
 }
 
 // форма смены данных пользователя
@@ -79,3 +91,91 @@ type ChangePassForm struct {
 }
 
 type Users []User
+
+func isValidEmail(email string) bool {
+	email = strings.TrimSpace(email)
+	if email == "" {
+		return false
+	}
+
+	// Простая проверка email
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return false
+	}
+
+	if parts[0] == "" || parts[1] == "" {
+		return false
+	}
+
+	// Проверяем что есть точка в доменной части
+	if !strings.Contains(parts[1], ".") {
+		return false
+	}
+
+	return true
+}
+
+func isValidName(name string) bool {
+	name = strings.TrimSpace(name)
+	if len(name) < MinNameLength || len(name) > MaxNameLength {
+		return false
+	}
+	return true
+}
+
+func isValidPassword(password string) bool {
+	if len(password) < MinPasswordLenght || len(password) > MaxPasswordLenght {
+		return false
+	}
+	return true
+}
+
+func (f *RegisterUserForm) Validate() error {
+	if !isValidEmail(f.Email) {
+		return ErrBadRequest
+	}
+	if !isValidName(f.Name) {
+		return ErrBadRequest
+	}
+	if !isValidPassword(f.Password) {
+		return ErrBadRequest
+	}
+	if f.Password != f.ConfirmPassword {
+		return ErrConflict
+	}
+	return nil
+}
+
+func (f *ChangeUserForm) Validate() error {
+	if !isValidName(f.Name) {
+		return ErrBadRequest
+	}
+	return nil
+}
+
+func (f *ChangePassForm) Validate() error {
+	if f.OldPassword == "" {
+		return ErrBadRequest
+	}
+	if !isValidPassword(f.Password) {
+		return ErrBadRequest
+	}
+	if f.Password != f.ConfirmPass {
+		return ErrConflict
+	}
+	if f.OldPassword == f.Password {
+		return ErrConflict
+	}
+	return nil
+}
+
+func (f *UserAuthForm) Validate() error {
+	if f.Email == "" || f.Password == "" {
+		return ErrBadRequest
+	}
+	if !isValidEmail(f.Email) {
+		return ErrBadRequest
+	}
+	return nil
+}
