@@ -35,7 +35,6 @@ func (app *App) AuthMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHan
 		}
 
 		ctx.SetUserValue(userCTX, user)
-
 		next(ctx)
 	}
 }

@@ -2,8 +2,6 @@ package domain
 
 import (
 	"errors"
-
-	"github.com/valyala/fasthttp"
 )
 
 var (
@@ -18,70 +16,3 @@ var (
 	ErrNoContent           = errors.New("no content")
 	ErrTimeout             = errors.New("Timeout")
 )
-
-type MessageError struct {
-	Message    string
-	StatusCode int
-}
-
-func (e *MessageError) Error() string {
-	return e.Message
-}
-
-func BadRequest(err error) error {
-	if err == nil {
-		err = ErrBadRequest
-	}
-	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusBadRequest}
-}
-
-func Unauthorized(err error) error {
-
-	if err == nil {
-		err = ErrUnauthorized
-	}
-	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusUnauthorized}
-}
-
-func Forbidden(err error) error {
-	if err == nil {
-		err = ErrForbidden
-	}
-	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusForbidden}
-}
-
-func NotFound(err error) error {
-	if err == nil {
-		err = ErrNotFound
-	}
-	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusNotFound}
-}
-
-func Conflict(err error) error {
-	if err == nil {
-		err = ErrConflict
-	}
-	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusConflict}
-}
-
-func Internal(err error) error {
-	if err == nil {
-		err = ErrInternalServerError
-	}
-	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusInternalServerError}
-}
-
-func NoContent(err error) error {
-	if err == nil {
-		err = ErrNoContent
-	}
-
-	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusNoContent}
-}
-
-func Timeout(err error) error {
-	if err == nil {
-		err = ErrTimeout
-	}
-	return &MessageError{Message: err.Error(), StatusCode: fasthttp.StatusConflict}
-}

@@ -18,13 +18,13 @@ func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
 	}
 
 	if user.ID <= 0 {
-		return domain.BadRequest(errors.New("invalid user id"))
+		return domain.ErrBadRequest
 	}
 
 	_, err := rep.db.NewDelete().Model(&domain.User{ID: id}).WherePK().Exec(ctx)
 	if err != nil {
 		rep.log.Error("Failed to delete user", "error", err, "userID", id)
-		return domain.Internal(errors.New("failed to delete user"))
+		return domain.ErrInternalServerError
 	}
 
 	rep.log.Debug("Delete", "deteled user", id)
@@ -44,7 +44,7 @@ func (rep *Repository) UpdateUser(ctx context.Context, user *domain.User) error 
 func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, error) {
 
 	if id <= 0 {
-		return domain.User{}, domain.BadRequest(errors.New("invalid user id"))
+		return domain.User{}, domain.ErrBadRequest
 	}
 
 	user := domain.User{}
@@ -52,18 +52,18 @@ func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, er
 	if err := rep.db.NewSelect().Model(&user).Where("id = ?", id).Scan(ctx); err != nil {
 		rep.log.Error("Failed to get user by id", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return user, domain.NotFound(errors.New("user not found"))
+			return user, domain.ErrNotFound
 		}
 
 		if isConnectionError(err) {
-			return user, domain.Internal(errors.New("database connection failed"))
+			return user, domain.ErrInternalServerError
 		}
 
 		if isTimeoutError(err) {
-			return user, domain.Internal(errors.New("database timeout"))
+			return user, domain.ErrInternalServerError
 		}
 
-		return user, domain.Internal(errors.New("failed to get user"))
+		return user, domain.ErrInternalServerError
 	}
 	// ошибка поиска по id. Отлавливать и возвращать самостоятельно
 	return user, nil
@@ -72,7 +72,7 @@ func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, er
 func (rep *Repository) GetUserByEmail(ctx context.Context, email string) (domain.User, error) {
 
 	if email == "" {
-		return domain.User{}, domain.BadRequest(errors.New("email cannot be empty"))
+		return domain.User{}, domain.ErrBadRequest
 	}
 
 	user := domain.User{}
@@ -82,14 +82,14 @@ func (rep *Repository) GetUserByEmail(ctx context.Context, email string) (domain
 		rep.log.Error("Failed to get user by email", "error", err, "email", email)
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return domain.User{}, domain.NotFound(errors.New("user not found"))
+			return domain.User{}, domain.ErrNotFound
 		}
 
 		if isConnectionError(err) {
-			return domain.User{}, domain.Internal(errors.New("database connection failed"))
+			return domain.User{}, domain.ErrInternalServerError
 		}
 
-		return domain.User{}, domain.Internal(errors.New("failed to get user"))
+		return domain.User{}, domain.ErrInternalServerError
 	}
 
 	return user, nil
@@ -112,7 +112,5 @@ func isTimeoutError(err error) bool {
 		strings.Contains(errorText, "context canceled")
 }
 
-// уровни мидлвар + корсы
-// хардкод убрать
 // функция search с фильтрами по имени, датами создания и удаления, по дате рождения, по полу
 // квери запросы

@@ -36,7 +36,7 @@ func (app *App) Register(ctx *fasthttp.RequestCtx) {
 	var form domain.RegisterUserForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (app *App) Delete(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.NotFound(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrNotFound)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (app *App) UpdatePassword(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
@@ -119,7 +119,7 @@ func (app *App) UpdatePassword(ctx *fasthttp.RequestCtx) {
 
 	var form domain.ChangePassForm
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
@@ -152,13 +152,13 @@ func (app *App) Auth(ctx *fasthttp.RequestCtx) {
 	var user domain.UserAuthForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
 	userRender, token, err := app.Service.Auth(ctx, user)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.Unauthorized(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.ErrBadRequest)
 		return
 	}
 
@@ -195,13 +195,13 @@ func (app *App) Get(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
 	user, err := app.Service.GetById(ctx, id)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, domain.NotFound(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, domain.ErrBadRequest)
 		return
 	}
 
@@ -236,7 +236,7 @@ func (app *App) Change(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
@@ -250,7 +250,7 @@ func (app *App) Change(ctx *fasthttp.RequestCtx) {
 	var form domain.ChangeUserForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
@@ -299,7 +299,7 @@ func (app *App) Check(ctx *fasthttp.RequestCtx) {
 
 	userRender, err := app.Service.Check(ctx, userID)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.Unauthorized(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.ErrBadRequest)
 		return
 	}
 
