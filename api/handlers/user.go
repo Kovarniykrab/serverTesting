@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"strconv"
 	"time"
 
@@ -13,8 +12,10 @@ import (
 
 const (
 	userCTX string = "user"
-	idCTX   string = "user"
+	idCTX   string = "id"
 )
+
+var errAccessDenied = errors.New("access denied: you can only modify your own account")
 
 // Register godoc
 // @Summary     регистрация
@@ -36,7 +37,7 @@ func (app *App) Register(ctx *fasthttp.RequestCtx) {
 	var form domain.RegisterUserForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
 
@@ -68,14 +69,14 @@ func (app *App) Delete(ctx *fasthttp.RequestCtx) {
 	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrNotFound)
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
 
 	currentUser := ctx.UserValue(userCTX).(int)
 
 	if currentUser != id {
-		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errors.New("access denied: you can only modify your own account"))
+		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errAccessDenied)
 		return
 	}
 
@@ -113,7 +114,7 @@ func (app *App) UpdatePassword(ctx *fasthttp.RequestCtx) {
 	currentUser := ctx.UserValue(userCTX).(int)
 
 	if currentUser != id {
-		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errors.New("access denied: you can only modify your own account"))
+		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errAccessDenied)
 		return
 	}
 
@@ -209,13 +210,13 @@ func (app *App) Get(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	jsonData, err := json.Marshal(user)
 	if err != nil {
-		slog.Error("Failed to marshal user response", "error", err)
+		app.logs.Error("Failed to marshal user response", "error", err)
 		app.sendErrorResponse(ctx, fasthttp.StatusInternalServerError, domain.ErrInternalServerError)
 		return
 	}
 
 	if _, err := ctx.Write(jsonData); err != nil {
-		slog.Error("Failed to write user response", "error", err)
+		app.logs.Error("Failed to write user response", "error", err)
 	}
 }
 
@@ -243,7 +244,7 @@ func (app *App) Change(ctx *fasthttp.RequestCtx) {
 	currentUser := ctx.UserValue(userCTX).(int)
 
 	if currentUser != id {
-		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errors.New("access denied: you can only modify your own account"))
+		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errAccessDenied)
 		return
 	}
 
@@ -307,12 +308,12 @@ func (app *App) Check(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	jsonData, err := json.Marshal(userRender)
 	if err != nil {
-		slog.Error("Failed to marshal user response", "error", err)
+		app.logs.Error("Failed to marshal user response", "error", err)
 		app.sendErrorResponse(ctx, fasthttp.StatusInternalServerError, domain.ErrInternalServerError)
 		return
 	}
 
 	if _, err := ctx.Write(jsonData); err != nil {
-		slog.Error("Failed to write user response", "error", err)
+		app.logs.Error("Failed to write user response", "error", err)
 	}
 }

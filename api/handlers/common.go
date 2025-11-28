@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log/slog"
 
 	"github.com/valyala/fasthttp"
 )
@@ -33,16 +32,16 @@ func (app *App) sendErrorResponse(ctx *fasthttp.RequestCtx, statusCode int, err 
 	response := ErrorResponse{Error: errorMsg}
 	jsonData, err := json.Marshal(response)
 	if err != nil {
-		slog.Error("Failed to marshal error response", "error", err)
+		app.logs.Error("Failed to marshal error response", "error", err)
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		if _, writeErr := ctx.Write([]byte(`{"error": "internal server error"}`)); writeErr != nil {
-			slog.Error("Failed to write fallback error response", "error", writeErr)
+			app.logs.Error("Failed to write fallback error response", "error", writeErr)
 		}
 		return
 	}
 
 	if _, err := ctx.Write(jsonData); err != nil {
-		slog.Error("Failed to write error response", "error", err)
+		app.logs.Error("Failed to write error response", "error", err)
 	}
 }
 
@@ -56,15 +55,15 @@ func (app *App) sendSuccessResponse(ctx *fasthttp.RequestCtx, statusCode int, me
 	}
 	jsonData, err := json.Marshal(response)
 	if err != nil {
-		slog.Error("Failed to marshal success response", "error", err)
+		app.logs.Error("Failed to marshal success response", "error", err)
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		if _, writeErr := ctx.Write([]byte(`{"error": "internal server error"}`)); writeErr != nil {
-			slog.Error("Failed to write fallback error response", "error", writeErr)
+			app.logs.Error("Failed to write fallback error response", "error", writeErr)
 		}
 		return
 	}
 
 	if _, err := ctx.Write(jsonData); err != nil {
-		slog.Error("Failed to write success response", "error", err)
+		app.logs.Error("Failed to write success response", "error", err)
 	}
 }

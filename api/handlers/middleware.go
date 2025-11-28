@@ -87,7 +87,3 @@ func (app *App) CorsMiddleware(next fasthttp.RequestHandler) fasthttp.RequestHan
 		next(ctx)
 	}
 }
-
-//validateJwt справить
-//jwt_service убрать в отдельную папку
-// ложить пользователя в контекст в мидлвар

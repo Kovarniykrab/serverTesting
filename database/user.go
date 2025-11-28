@@ -11,16 +11,6 @@ import (
 
 func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
 
-	user, er := rep.GetUserById(ctx, id)
-	if er != nil {
-		rep.log.Error("User not found for deletion", "id", id, "error", er)
-		return er
-	}
-
-	if user.ID <= 0 {
-		return domain.ErrBadRequest
-	}
-
 	_, err := rep.db.NewDelete().Model(&domain.User{ID: id}).WherePK().Exec(ctx)
 	if err != nil {
 		rep.log.Error("Failed to delete user", "error", err, "userID", id)
@@ -32,20 +22,13 @@ func (rep *Repository) DeleteUser(ctx context.Context, id int) error {
 }
 
 func (rep *Repository) UpdateUser(ctx context.Context, user *domain.User) error {
-	if user.ID == 0 {
-		_, err := rep.db.NewInsert().Model(user).Exec(ctx)
-		return err
-	} else {
-		_, err := rep.db.NewInsert().Model(user).On("CONFLICT (id) DO UPDATE").Exec(ctx)
-		return err
-	}
+
+	_, err := rep.db.NewInsert().Model(user).On("CONFLICT (id) DO UPDATE").Exec(ctx)
+	return err
+
 }
 
 func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, error) {
-
-	if id <= 0 {
-		return domain.User{}, domain.ErrBadRequest
-	}
 
 	user := domain.User{}
 
@@ -70,10 +53,6 @@ func (rep *Repository) GetUserById(ctx context.Context, id int) (domain.User, er
 }
 
 func (rep *Repository) GetUserByEmail(ctx context.Context, email string) (domain.User, error) {
-
-	if email == "" {
-		return domain.User{}, domain.ErrBadRequest
-	}
 
 	user := domain.User{}
 
