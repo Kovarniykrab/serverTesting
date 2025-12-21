@@ -20,6 +20,7 @@ type Web struct {
 	ReadTimeout  int        `long:"web-read-timeout" env:"SERVERTESTING_WEB_READ_TIMEOUT"`
 	WriteTimeout int        `long:"web-write-timeout" env:"SERVERTESTING_WEB_WRITE_TIMEOUT"`
 	IdleTimeout  int        `long:"web-idle-timeout" env:"SERVERTESTING_WEB_IDLE_TIMEOUT"`
+	Cors         string     `long:"web-cors" env:"SERVERTESTING_WEB_CORS"`
 	SSLSertPath  string     `long:"web-ssl-sert-path" env:"SERVERTESTING_WEB_SSL_SERT_PATH"`
 	SSLKeyPath   string     `long:"web-ssl-key-path" env:"SERVERTESTING_WEB_SSL_KEY_PATH"`
 	LogLevel     slog.Level `long:"web-log-level" env:"SERVERTESTING_WEB_LOG_LEVEL"`

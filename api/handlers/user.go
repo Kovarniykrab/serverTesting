@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 	"time"
 
@@ -9,7 +10,14 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-// RegisterUser godoc
+const (
+	userCTX string = "user"
+	idCTX   string = "id"
+)
+
+var errAccessDenied = errors.New("access denied: you can only modify your own account")
+
+// Register godoc
 // @Summary     регистрация
 // @Description во время регистации хендлер принимает данные, которые подает пользователь и проверяет
 // @Description если email не занят,
@@ -25,25 +33,25 @@ import (
 // @Failure      404  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router      /api/user/register [POST]
-func (app *App) RegisterUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) Register(ctx *fasthttp.RequestCtx) {
 	var form domain.RegisterUserForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
 
-	if err := app.Service.RegisterUser(ctx, form); err != nil {
+	if err := app.Service.Register(ctx, form); err != nil {
 		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
 
 	app.sendSuccessResponse(ctx, fasthttp.StatusCreated, "Пользователь успешно зарегистрирован")
 
-	//запись данных в бд
+	//насвание
 }
 
-// DeleteUser godoc
+// Delete godoc
 // @Summary     Удаление пользователя
 // @Description Пользователя удаляют из системы по ID. Хендлер принимает ID,
 // @Description и с его помощью находит пользователя в базе данных и удаляет его из нее
@@ -56,16 +64,23 @@ func (app *App) RegisterUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      404  {object}  ErrorResponse "запрашиваемая страница не существует"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/delete/{id} [DELETE]
-func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) Delete(ctx *fasthttp.RequestCtx) {
 
-	idStr := ctx.UserValue("id").(string)
+	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.NotFound(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
 
-	if err := app.Service.DeleteUser(ctx, id); err != nil {
+	currentUser := ctx.UserValue(userCTX).(int)
+
+	if currentUser != id {
+		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errAccessDenied)
+		return
+	}
+
+	if err := app.Service.Delete(ctx, id); err != nil {
 		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, err)
 		return
 	}
@@ -87,18 +102,25 @@ func (app *App) DeleteUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/change_password/{id} [PUT]
-func (app *App) UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) UpdatePassword(ctx *fasthttp.RequestCtx) {
 
-	idStr := ctx.UserValue("id").(string)
+	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
+		return
+	}
+
+	currentUser := ctx.UserValue(userCTX).(int)
+
+	if currentUser != id {
+		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errAccessDenied)
 		return
 	}
 
 	var form domain.ChangePassForm
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
@@ -111,7 +133,7 @@ func (app *App) UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 
 }
 
-// AuthUSer godoc
+// Auth godoc
 // @Summary    Авторизация
 // @Description Авторизация происходит с помощью email и пароля
 // @Description хендлер принимает почту и пароль. По почте ищет пользователя и сверяет 2 хеша. Если они совпадают - пользователь авторизуется
@@ -127,42 +149,38 @@ func (app *App) UpdatePasswordHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      404  {object}  ErrorResponse "Неверный Email/Password"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/login [POST]
-func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) Auth(ctx *fasthttp.RequestCtx) {
 	var user domain.UserAuthForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &user); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
-	userRender, err := app.Service.AuthUser(ctx, user)
+	userRender, token, err := app.Service.Auth(ctx, user)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.Unauthorized(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.ErrBadRequest)
 		return
 	}
 
 	cookie := &fasthttp.Cookie{}
 	cookie.SetKey("session_token")
-	cookie.SetValue(userRender.Token)
+	cookie.SetValue(token)
 	cookie.SetExpire(time.Now().Add(24 * time.Hour))
 	cookie.SetHTTPOnly(true)
+	cookie.SetSecure(true)
 	cookie.SetPath("/")
+
+	cookie.SetSameSite(fasthttp.CookieSameSiteLaxMode)
 	ctx.Response.Header.SetCookie(cookie)
 
-	//проверка существования польхователя в бд по логену или email
+	app.sendSuccessResponse(ctx, fasthttp.StatusOK, "Успешная авторизация", userRender)
 
-	//проверка пароля
-
-	//генерация токена
-
-	app.sendSuccessResponse(ctx, fasthttp.StatusOK, "Успешная авторизация")
-
-	//выдать сгенерированный jwt токен
-	//сообщение "Успешный вход"
-
+	// переделать токены под маяк.
+	//service/auth.go
 }
 
-// GetUser godoc
+// Get godoc
 // @Summary     Поиск польхователя
 // @Description хендлер получает ID или name и ищет пользователей по id или name в базе данных и выводит все результаты в форме списка.
 // @Tags         USER
@@ -174,28 +192,35 @@ func (app *App) AuthUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      404  {object}  ErrorResponse "Пользователь не найден"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/profile/{id} [GET]
-func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
-	idStr := ctx.UserValue("id").(string)
+func (app *App) Get(ctx *fasthttp.RequestCtx) {
+	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
-	user, err := app.Service.GetUserById(ctx, id)
+	user, err := app.Service.GetById(ctx, id)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, domain.NotFound(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusNotFound, domain.ErrBadRequest)
 		return
 	}
 
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	if jsonData, err := json.Marshal(user); err == nil {
-		ctx.Write(jsonData)
+	jsonData, err := json.Marshal(user)
+	if err != nil {
+		app.logs.Error("Failed to marshal user response", "error", err)
+		app.sendErrorResponse(ctx, fasthttp.StatusInternalServerError, domain.ErrInternalServerError)
+		return
+	}
+
+	if _, err := ctx.Write(jsonData); err != nil {
+		app.logs.Error("Failed to write user response", "error", err)
 	}
 }
 
-// ChangeUser godoc
+// Change godoc
 // @Summary     изменение данных пользователя
 // @Description хендлер принимает форму, в которой содержатся новые данные и данные оставшиеся без изменений.
 // @Description он записывает все данные вместо старых
@@ -207,23 +232,30 @@ func (app *App) GetUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/change_user/{id} [PUT]
-func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) Change(ctx *fasthttp.RequestCtx) {
 
-	idStr := ctx.UserValue("id").(string)
+	idStr := ctx.UserValue(idCTX).(string)
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
+		return
+	}
+
+	currentUser := ctx.UserValue(userCTX).(int)
+
+	if currentUser != id {
+		app.sendErrorResponse(ctx, fasthttp.StatusForbidden, errAccessDenied)
 		return
 	}
 
 	var form domain.ChangeUserForm
 
 	if err := json.Unmarshal(ctx.PostBody(), &form); err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.BadRequest(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, domain.ErrBadRequest)
 		return
 	}
 
-	if err := app.Service.UpdateUser(ctx, id, form); err != nil {
+	if err := app.Service.Update(ctx, id, form); err != nil {
 		app.sendErrorResponse(ctx, fasthttp.StatusBadRequest, err)
 		return
 	}
@@ -231,7 +263,7 @@ func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 	app.sendSuccessResponse(ctx, fasthttp.StatusOK, "Данные успешно обновлены")
 }
 
-// LogoutUser godoc
+// Logout godoc
 // @Summary     выход
 // @Description сессия завершается по сигналу или по истечении токена
 // @Description пользователя должно выкинуть на страницу авторизации
@@ -242,7 +274,7 @@ func (app *App) ChangeUserHandler(ctx *fasthttp.RequestCtx) {
 // @Failure      400  {object}  ErrorResponse "Неверный запрос"
 // @Failure      500  {object}  ErrorResponse "Ошибка сервера"
 // @Router     /api/user/logout [POST]
-func (app *App) LogoutUserHandler(ctx *fasthttp.RequestCtx) {
+func (app *App) Logout(ctx *fasthttp.RequestCtx) {
 
 	cookie := &fasthttp.Cookie{}
 	cookie.SetKey("session_token")
@@ -263,18 +295,25 @@ func (app *App) LogoutUserHandler(ctx *fasthttp.RequestCtx) {
 // @Success 204
 // @Failure 401 {object} ErrorResponse "ошибка"
 // @Router /api/user/check [GET]
-func (app *App) CheckHandler(ctx *fasthttp.RequestCtx) {
-	userID := ctx.UserValue("userID").(int)
+func (app *App) Check(ctx *fasthttp.RequestCtx) {
+	userID := ctx.UserValue(userCTX).(int)
 
-	userRender, err := app.Service.CheckUser(ctx, userID)
+	userRender, err := app.Service.Check(ctx, userID)
 	if err != nil {
-		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.Unauthorized(err))
+		app.sendErrorResponse(ctx, fasthttp.StatusUnauthorized, domain.ErrBadRequest)
 		return
 	}
 
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	if jsonData, err := json.Marshal(userRender); err == nil {
-		ctx.Write(jsonData)
+	jsonData, err := json.Marshal(userRender)
+	if err != nil {
+		app.logs.Error("Failed to marshal user response", "error", err)
+		app.sendErrorResponse(ctx, fasthttp.StatusInternalServerError, domain.ErrInternalServerError)
+		return
+	}
+
+	if _, err := ctx.Write(jsonData); err != nil {
+		app.logs.Error("Failed to write user response", "error", err)
 	}
 }

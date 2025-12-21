@@ -5,11 +5,12 @@ import (
 	"log/slog"
 
 	"github.com/Kovarniykrab/serverTesting/api/handlers"
-	"github.com/Kovarniykrab/serverTesting/application/service"
 	"github.com/Kovarniykrab/serverTesting/configs"
 	"github.com/Kovarniykrab/serverTesting/database"
+	"github.com/Kovarniykrab/serverTesting/internal/service"
 	"github.com/fasthttp/router"
 	swagger "github.com/swaggo/fasthttp-swagger"
+	"github.com/valyala/fasthttp"
 )
 
 type App struct {
@@ -34,9 +35,18 @@ func New(ctx context.Context, cfg *configs.Config, log *slog.Logger) *App {
 		logger: log,
 	}
 }
+func (app *App) applyMiddlewares(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
+	handler = app.PanicRecoveryMiddleware(handler)
+	handler = app.LoggingMiddleware(handler)
+	handler = app.CorsMiddleware(handler)
+
+	return handler
+}
 
 func (app *App) GetRouter() *router.Router {
+
 	routers := router.New()
+
 	api := routers.Group("/api")
 	swaggerRouter := routers.Group("/info")
 	swaggerRouter.GET("/swagger/{any:*}", swagger.WrapHandler())
@@ -47,4 +57,8 @@ func (app *App) GetRouter() *router.Router {
 
 	return routers
 
+}
+func (app *App) GetHandler() fasthttp.RequestHandler {
+	r := app.GetRouter()
+	return app.applyMiddlewares(r.Handler)
 }

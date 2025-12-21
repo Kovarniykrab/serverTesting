@@ -3,8 +3,8 @@ package handlers
 import (
 	"log/slog"
 
-	"github.com/Kovarniykrab/serverTesting/application/service"
 	"github.com/Kovarniykrab/serverTesting/configs"
+	"github.com/Kovarniykrab/serverTesting/internal/service"
 )
 
 type App struct {
